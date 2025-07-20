@@ -2,10 +2,19 @@ manifest:
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
+    - name: urob
+      url-base: https://github.com/urob
   projects:
     - name: zmk
       remote: zmkfirmware
       revision: main
       import: app/west.yml
+    - name: zmk-adaptive-key
+      remote: urob
+      revision: main
+      import:
+        # This allows the module's settings to be included
+        name-allowlist:
+          - adaptive_key
   self:
     path: config

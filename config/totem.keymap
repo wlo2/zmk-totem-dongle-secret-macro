@@ -37,6 +37,30 @@
     #include "secret_macro.overlay"
 
     behaviors {
+        magic_repeat: magic_repeat {
+            compatible = "zmk,behavior-adaptive-key";
+            label = "MAGIC_REPEAT";
+            #binding-cells = <0>;
+            
+            // Default behavior - repeat the last key
+            bindings = <&key_repeat>;
+            
+            // Timeout for adaptive behavior (in milliseconds)
+            timeout-ms = <1000>;
+            
+            // Adaptive bindings - special cases
+            adapt-when-pressed = <B>;
+            adapt-to = <&macro_because>;
+        };
+
+        macro_because: macro_because {
+            compatible = "zmk,behavior-macro";
+            label = "MACRO_BECAUSE";
+            #binding-cells = <0>;
+            
+            bindings = <&kp E &kp C &kp A &kp U &kp S &kp E>;
+        };
+
         hm: homerow_mods {
             compatible = "zmk,behavior-hold-tap";
             label = "HOMEROW_MODS";
@@ -137,7 +161,7 @@
             bindings = <
                &kp P  &kp V  &kp J            &kp K      &kp Z              &kp X            &kp G  &key_repeat  &kp SLASH  &kp PERIOD
                &kp N  &kp S  &kp H            &kp T      &kp M              &kp Y            &kp C  &kp A        &kp E      &kp I
-&mt LSHFT ESC  &kp B  &kp F  &kp L            &kp D      &QU                &kp SQT          &kp W  &kp O        &kp U      &kp COMMA   &kp SEMI
+&mt LSHFT ESC  &kp B  &kp F  &kp L            &kp D      &QU                &kp SQT          &kp W  &kp O        &kp U      &kp COMMA   &magic_repeat
                              &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &kp R  &sk LSHIFT
             >;
         };
