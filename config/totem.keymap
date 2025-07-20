@@ -37,6 +37,7 @@
     #include "secret_macro.overlay"
 
     behaviors {
+        // Define the adaptive repeat key behavior
         magic_repeat: magic_repeat {
             compatible = "zmk,behavior-adaptive-key";
             label = "MAGIC_REPEAT";
@@ -45,14 +46,12 @@
             // Default behavior - repeat the last key
             bindings = <&key_repeat>;
             
-            // Timeout for adaptive behavior (in milliseconds)
-            timeout-ms = <1000>;
-            
             // Adaptive bindings - special cases
             adapt-when-pressed = <B>;
             adapt-to = <&macro_because>;
         };
 
+        // Macro to output "ecause" when 'b' is the last pressed key
         macro_because: macro_because {
             compatible = "zmk,behavior-macro";
             label = "MACRO_BECAUSE";
