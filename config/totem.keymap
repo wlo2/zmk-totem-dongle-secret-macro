@@ -48,27 +48,19 @@
         
         // Define the adaptive repeat key behavior
         magic_repeat: magic_repeat {
-            compatible = "zmk,behavior-adaptive-key";
+            compatible = "zmk,behavior-antecedent-morph";
             label = "MAGIC_REPEAT";
             #binding-cells = <0>;
             
-            // First binding is default, second is when condition is met
-            bindings = <&key_repeat>, <&macro_because>;
+            // Default behavior - repeat the last key
+            defaults = <&key_repeat>;
             
-            // Condition: when last key was B
-            adapt-by = <1>;
-            adapt-on = <B>;
-        };
-
-        hm: homerow_mods {
-            compatible = "zmk,behavior-hold-tap";
-            label = "HOMEROW_MODS";
-            #binding-cells = <2>;
-            flavor = "tap-preferred";
-            tapping-term-ms = <200>;
-            quick-tap-ms = <125>;
-            global-quick-tap;
-            bindings = <&kp>, <&kp>;
+            // When last key was B, output "ecause" instead
+            antecedents = <B>;
+            bindings = <&macro_because>;
+            
+            // Maximum delay to consider the antecedent
+            max-delay-ms = <1000>;
         };
     };
 
