@@ -37,20 +37,6 @@
     #include "secret_macro.overlay"
 
     behaviors {
-        // Define the adaptive repeat key behavior
-        magic_repeat: magic_repeat {
-            compatible = "zmk,behavior-adaptive-key";
-            label = "MAGIC_REPEAT";
-            #binding-cells = <0>;
-            
-            // Default behavior - repeat the last key
-            bindings = <&key_repeat>;
-            
-            // Adaptive bindings - special cases
-            adapt-when-pressed = <B>;
-            adapt-to = <&macro_because>;
-        };
-
         // Macro to output "ecause" when 'b' is the last pressed key
         macro_because: macro_because {
             compatible = "zmk,behavior-macro";
@@ -58,6 +44,19 @@
             #binding-cells = <0>;
             
             bindings = <&kp E &kp C &kp A &kp U &kp S &kp E>;
+        };
+        
+        // Define the adaptive repeat key behavior
+        magic_repeat: magic_repeat {
+            compatible = "zmk,behavior-adaptive-key";
+            label = "MAGIC_REPEAT";
+            #binding-cells = <0>;
+            
+            // Default behavior - repeat the last key
+            bindings = <&key_repeat>, <&macro_because>;
+            
+            // Specify which keys trigger the alternative behavior
+            keys = <B>;
         };
 
         hm: homerow_mods {
