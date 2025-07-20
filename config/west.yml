@@ -12,9 +12,6 @@ manifest:
     - name: zmk-adaptive-key
       remote: urob
       revision: main
-      import:
-        # This allows the module's settings to be included
-        name-allowlist:
-          - adaptive_key
+      path: modules/zmk-adaptive-key
   self:
     path: config
