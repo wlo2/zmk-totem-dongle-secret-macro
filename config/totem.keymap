@@ -52,11 +52,12 @@
             label = "MAGIC_REPEAT";
             #binding-cells = <0>;
             
-            // Default behavior - repeat the last key
+            // First binding is default, second is when condition is met
             bindings = <&key_repeat>, <&macro_because>;
             
-            // Specify which keys trigger the alternative behavior
-            keys = <B>;
+            // Condition: when last key was B
+            adapt-by = <1>;
+            adapt-on = <B>;
         };
 
         hm: homerow_mods {
