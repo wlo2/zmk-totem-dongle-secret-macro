@@ -65,6 +65,21 @@
             // Maximum delay to consider the antecedent
 
             max-delay-ms = <1000>;
+
+        magic_j: magic_j {
+            compatible = "zmk,behavior-antecedent-morph";
+            label = "MAGIC_J";
+            #binding-cells = <0>;
+        
+            // Default behavior - output 'j'
+            defaults = <&kp J>;
+        
+            // When last key was O, output 'a' instead
+            antecedents = <O>;
+            bindings = <&kp A>;
+        
+            // Maximum delay to consider the antecedent
+            max-delay-ms = <1000>;
         };
     };
 
@@ -154,7 +169,7 @@
         Night {
             display-name = "Night";
             bindings = <
-               &kp P  &kp V  &kp J            &kp K      &kp Z              &kp X            &kp G  &magic_repeat  &kp SLASH  &kp PERIOD
+               &kp P  &kp V  &magic_j            &kp K      &kp Z              &kp X            &kp G  &magic_repeat  &kp SLASH  &kp PERIOD
                &kp N  &kp S  &kp H            &kp T      &kp M              &kp Y            &kp C  &kp A          &kp E      &kp I
 &mt LSHFT ESC  &kp B  &kp F  &kp L            &kp D      &QU                &kp SQT          &kp W  &kp O          &kp U      &kp COMMA   &kp SEMICOLON
                              &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &kp R  &sk LSHIFT
