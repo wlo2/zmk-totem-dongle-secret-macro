@@ -51,7 +51,7 @@ behaviors {
         bindings = <&kp N &kp G>;
     };
 
-    macro_ng: macro_he {
+    macro_he: macro_he {
         compatible = "zmk,behavior-macro";
         label = "MACRO_HE";
         #binding-cells = <0>;
