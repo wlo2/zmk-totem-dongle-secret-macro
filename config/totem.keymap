@@ -37,12 +37,18 @@
     #include "secret_macro.overlay"
 
 behaviors {
-    // Macro to output "ecause" when 'b' is the last pressed key
     macro_because: macro_because {
         compatible = "zmk,behavior-macro";
         label = "MACRO_BECAUSE";
         #binding-cells = <0>;
         bindings = <&kp E &kp C &kp A &kp U &kp S &kp E>;
+    };
+
+    macro_ng: macro_ng {
+        compatible = "zmk,behavior-macro";
+        label = "MACRO_NG";
+        #binding-cells = <0>;
+        bindings = <&kp N &kp G>;
     };
     
     // Define the adaptive repeat key behavior
@@ -53,25 +59,24 @@ behaviors {
         // Default behavior - repeat the last key
         defaults = <&key_repeat>;
         // When last key was B, output "ecause" instead
-        antecedents = <B>;
-        bindings = <&macro_because>;
+        // When last key was I, output "ng" instead
+        antecedents = <B I>;
+        bindings = <&macro_because &macro_ng>;
         // Maximum delay to consider the antecedent
         max-delay-ms = <1000>;
-    };  // <- This closing brace was missing
+    };
     
     magic_j: magic_j {
         compatible = "zmk,behavior-antecedent-morph";
         label = "MAGIC_J";
         #binding-cells = <0>;
    
-        // Default behavior - output 'j'
         defaults = <&kp J>;
    
         // When last key was O, output 'a' instead
         antecedents = <O>;
         bindings = <&kp A>;
    
-        // Maximum delay to consider the antecedent
         max-delay-ms = <1000>;
     };
 };
