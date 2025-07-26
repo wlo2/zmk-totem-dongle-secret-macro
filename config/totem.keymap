@@ -51,6 +51,13 @@ behaviors {
         bindings = <&kp N &kp G>;
     };
 
+    macro_nd: macro_nd {
+        compatible = "zmk,behavior-macro";
+        label = "MACRO_ND";
+        #binding-cells = <0>;
+        bindings = <&kp N &kp D>;
+    };
+
     macro_he: macro_he {
         compatible = "zmk,behavior-macro";
         label = "MACRO_HE";
@@ -78,8 +85,8 @@ behaviors {
    
         defaults = <&kp J>;
    
-        antecedents = <O T>;
-        bindings = <&kp A &macro_he>;
+        antecedents = <O T A>;
+        bindings = <&kp A &macro_he &macro_nd>;
    
         max-delay-ms = <1000>;
     };
