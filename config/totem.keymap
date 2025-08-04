@@ -211,7 +211,7 @@
             bindings = <
         &kp F6  &kp F7     &kp F8     &kp F9     &kp F10          &soft_off  &kp F11        &kp F12            &kp F13  &kp F14
         &trans  &kp LC(B)  &kp CLEAR  &ahahahah  &secret_macro    &tog 1     &kp LC(SLASH)  &kp LC(BACKSPACE)  &trans   &kp SQT
-&trans  &kp F1  &kp F2     &kp F3     &kp F4     &kp F5           &trans     &trans         &trans             &trans   &trans   &trans
+&trans  &kp F1  &kp F2     &kp F3     &kp F4     &kp F5           &tog 5     &trans         &trans             &trans   &trans   &trans
                            &trans     &trans     &trans           &trans     &trans         &trans
             >;
         };
@@ -219,7 +219,7 @@
         Gaming {
             bindings = <
         &trans   &trans  &kp NUMBER_3  &trans        &trans     &trans  &trans  &trans  &trans  &trans
-        &kp ESC  &kp Q   &kp W         &kp E         &kp R      &trans  &trans  &trans  &trans  &trans
+        &kp ESC  &kp Q   &kp W         &kp E         &kp R      &tog 0  &trans  &trans  &trans  &trans
 &trans  &trans   &trans  &trans        &trans        &trans     &trans  &trans  &trans  &trans  &trans  &trans
                          &trans        &kp NUMBER_1  &kp TAB    &trans  &trans  &trans
             >;
