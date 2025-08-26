@@ -75,11 +75,9 @@
             // Default behavior - repeat the last key
 
             defaults = <&key_repeat>;
-            antecedents = <B I>;
-            bindings = <&macro_because &macro_ng>;
-
+            antecedents = <&kp SQT &kp G &kp U &kp W &kp Y &kp R>;
+            bindings = <&kp R &kp S &kp E &kp H &kp &kp COMMA &kp L>;
             // Maximum delay to consider the antecedent
-
             max-delay-ms = <1000>;
         };
 
