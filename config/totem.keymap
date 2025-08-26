@@ -76,7 +76,7 @@
 
             defaults = <&key_repeat>;
             antecedents = <&kp SQT &kp G &kp U &kp W &kp Y &kp R>;
-            bindings = <&kp R &kp S &kp E &kp H &kp &kp COMMA &kp L>;
+            bindings = <&kp R &kp S &kp E &kp H &kp COMMA &kp L>;
             // Maximum delay to consider the antecedent
             max-delay-ms = <1000>;
         };
