@@ -177,13 +177,13 @@
             >;
         };
 
-        Night {
-            display-name = "Night";
+        Whirl_mod {
+            display-name = "Whirl";
             bindings = <
-               &kp P  &kp V  &magic_j         &kp K      &kp Z              &kp X            &kp G  &magic_repeat  &kp SLASH  &kp PERIOD
-               &kp N  &kp S  &kp H            &kp T      &kp M              &kp Y            &kp C  &kp A          &kp E      &kp I
-&mt LSHFT ESC  &kp B  &kp F  &kp L            &kp D      &QU                &kp SQT          &kp W  &kp O          &kp U      &kp COMMA   &kp SEMICOLON
-                             &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &kp R  &sk LSHIFT
+               &QU    &kp G  &kp D            &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
+               &kp N  &kp S  &kp T            &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
+&mt LSHFT ESC  &kp B  &kp C  &kp P            &kp W      &kp Z              &kp X            &kp L          &kp U          &kp O       &kp Y      &kp COMMA
+                             &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &magic_repeat  &sk LSHIFT
             >;
         };
 
