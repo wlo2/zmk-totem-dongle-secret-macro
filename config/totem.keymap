@@ -51,20 +51,6 @@
             bindings = <&kp N &kp G>;
         };
 
-        macro_nd: macro_nd {
-            compatible = "zmk,behavior-macro";
-            label = "MACRO_ND";
-            #binding-cells = <0>;
-            bindings = <&kp N &kp D>;
-        };
-
-        macro_he: macro_he {
-            compatible = "zmk,behavior-macro";
-            label = "MACRO_HE";
-            #binding-cells = <0>;
-            bindings = <&kp H &kp E>;
-        };
-
         // Define the adaptive repeat key behavior
 
         magic_repeat: magic_repeat {
@@ -78,7 +64,7 @@
             antecedents = <SQT G U W Y R>;
             bindings = <&kp R &kp S &kp E &kp H &kp COMMA &kp L>;
             // Maximum delay to consider the antecedent
-            max-delay-ms = <1000>;
+            max-delay-ms = <5000>;
         };
 
         magic_j: magic_j {
