@@ -72,9 +72,9 @@
             label = "MAGIC_J";
             #binding-cells = <0>;
             defaults = <&kp J>;
-            antecedents = <O T A>;
-            bindings = <&kp A &macro_he &macro_nd>;
-            max-delay-ms = <1000>;
+            antecedents = <O>;
+            bindings = <&kp A>;
+            max-delay-ms = <5000>;
         };
     };
 
