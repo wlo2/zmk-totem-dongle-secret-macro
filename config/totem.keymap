@@ -63,7 +63,9 @@
             defaults = <&key_repeat>;
             antecedents = <SQT G U W Y R>;
             bindings = <&kp R &kp S &kp E &kp H &kp COMMA &kp L>;
+
             // Maximum delay to consider the antecedent
+
             max-delay-ms = <5000>;
         };
 
@@ -174,29 +176,29 @@
         Nav {
             display-name = "Nav";
             bindings = <
-           &Remnote_arrow  &kp HOME     &kp UP_ARROW   &kp END    &kp LBRC    &kp RBRC  &trans  &trans  &trans  &trans
-           &kp DEL         &kp LEFT     &kp DOWN       &kp RIGHT  &kp LBKT    &kp RBKT  &trans  &trans  &trans  &kp LEFT_BRACKET
-&kp TILDE  &kp LEFT_WIN    &kp LS(TAB)  &kp AMPERSAND  &kp TAB    &kp LPAR    &kp RPAR  &trans  &trans  &trans  &trans            &kp PRINTSCREEN
-                                        &trans         &trans     &trans      &trans    &trans  &trans
+           &Remnote_arrow  &kp HOME     &kp UP_ARROW  &kp END            &kp LBRC    &kp RBRC  &trans         &trans          &trans         &kp RIGHT_BRACKET
+           &kp DEL         &kp LEFT     &kp DOWN      &kp RIGHT          &kp LBKT    &kp RBKT  &trans         &trans          &trans         &kp LEFT_BRACKET
+&kp TILDE  &kp LEFT_WIN    &kp LS(TAB)  &kp TAB       &kp LC(BACKSPACE)  &kp LPAR    &kp RPAR  &kp RA(COMMA)  &kp RA(PERIOD)  &kp RA(MINUS)  &trans             &kp PRINTSCREEN
+                                        &trans        &trans             &trans      &trans    &trans         &trans
             >;
         };
 
         Sym {
             display-name = "Sym";
             bindings = <
-               &kp EXCL      &kp AT        &kp HASH      &kp DOLLAR     &kp PERCENT     &kp CARET       &kp AMPERSAND  &kp ASTERISK  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS
-               &kp NUMBER_1  &kp NUMBER_2  &kp NUMBER_3  &kp NUMBER_4   &kp NUMBER_5    &kp NUMBER_6    &kp NUMBER_7   &kp NUMBER_8  &kp NUMBER_9          &kp NUMBER_0
-&kp LS(GRAVE)  &kp GRAVE     &kp PLUS      &kp TAB       &kp LS(LC(V))  &kp PIPE        &kp UNDERSCORE  &kp MINUS      &kp EQUAL     &kp LS(SLASH)         &kp BACKSLASH          &kp LEFT_BRACKET
-                                           &trans        &trans         &trans          &trans          &trans         &trans
+           &kp EXCL      &kp AT        &kp HASH      &kp DOLLAR     &kp PERCENT     &kp CARET       &kp AMPERSAND  &kp ASTERISK  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS
+           &kp NUMBER_1  &kp NUMBER_2  &kp NUMBER_3  &kp NUMBER_4   &kp NUMBER_5    &kp NUMBER_6    &kp NUMBER_7   &kp NUMBER_8  &kp NUMBER_9          &kp NUMBER_0
+&kp TILDE  &kp GRAVE     &kp LS(TAB)   &kp TAB       &kp LS(LC(V))  &kp PIPE        &kp UNDERSCORE  &kp MINUS      &kp EQUAL     &kp LS(SLASH)         &kp BACKSLASH          &kp PLUS
+                                       &trans        &trans         &trans          &trans          &trans         &trans
             >;
         };
 
         Tri-layer {
             bindings = <
-        &kp F6  &kp F7     &kp F8     &kp F9     &kp F10          &soft_off  &kp F11        &kp F12            &kp F13  &kp F14
-        &trans  &kp LC(B)  &kp CLEAR  &ahahahah  &secret_macro    &tog 1     &kp LC(SLASH)  &kp LC(BACKSPACE)  &trans   &kp SQT
-&trans  &kp F1  &kp F2     &kp F3     &kp F4     &kp F5           &tog 5     &trans         &trans             &trans   &trans   &trans
-                           &trans     &trans     &trans           &trans     &trans         &trans
+        &kp F6  &kp F7  &kp F8  &kp F9     &kp F10          &none   &kp F11        &kp F12  &kp F13  &kp F14
+        &none   &none   &none   &ahahahah  &secret_macro    &tog 1  &kp LC(SLASH)  &none    &none    &none
+&trans  &kp F1  &kp F2  &kp F3  &kp F4     &kp F5           &tog 5  &trans         &trans   &trans   &trans   &trans
+                        &trans  &trans     &trans           &trans  &trans         &trans
             >;
         };
 
