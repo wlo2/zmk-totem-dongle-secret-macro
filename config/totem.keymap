@@ -177,7 +177,7 @@
             display-name = "Nav";
             bindings = <
            &Remnote_arrow  &kp HOME     &kp UP_ARROW  &kp END            &kp LBRC    &kp RBRC  &trans  &trans         &trans          &kp RIGHT_BRACKET
-           &kp DEL         &kp LEFT     &kp DOWN      &kp RIGHT          &kp LBKT    &kp RBKT  &trans  &trans         &trans          &kp LEFT_BRACKET
+           &kp DEL         &kp LEFT     &kp DOWN      &kp RIGHT          &kp LBKT    &kp RBKT  &trans  &kp KP_COMMA   &kp KP_DOT      &kp LEFT_BRACKET
 &kp TILDE  &kp LEFT_WIN    &kp LS(TAB)  &kp TAB       &kp LC(BACKSPACE)  &kp LPAR    &kp RPAR  &none   &kp RA(COMMA)  &kp RA(PERIOD)  &kp RA(MINUS)      &kp PRINTSCREEN
                                         &trans        &trans             &trans      &trans    &trans  &trans
             >;
