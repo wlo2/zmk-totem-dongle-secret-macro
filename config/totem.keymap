@@ -30,7 +30,7 @@
 &lt {
     tapping-term-ms = <200>;
     flavor = "hold-preferred";
-    quick-tap-ms = <120>;
+    quick-tap-ms = <190>;
 };
 
 / {
