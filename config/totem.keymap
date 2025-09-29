@@ -144,7 +144,7 @@
         space_comma: space_comma {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp COMMA &kp SPACE>;
+            bindings = <&kp KP_COMMA &kp SPACE>;
             label = "SPACE_COMMA";
         };
     };
