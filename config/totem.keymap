@@ -21,7 +21,7 @@
 #define Gameplus    5
 
 &mt {
-    quick-tap-ms = <160>;
+    quick-tap-ms = <190>;
     global-quick-tap;
     flavor = "hold-preferred";
     tapping-term-ms = <200>;
@@ -65,7 +65,6 @@
             bindings = <&kp R &kp S &kp E &kp H &kp COMMA &kp L>;
 
             // Maximum delay to consider the antecedent
-
             max-delay-ms = <5000>;
         };
 
@@ -93,29 +92,14 @@
             key-positions = <2 13>;
         };
 
-        PrtSc {
-            bindings = <&kp PRINTSCREEN>;
-            key-positions = <5 15>;
-        };
-
         Capture_full_screen {
             bindings = <&kp KP_PLUS>;
             key-positions = <9 31>;
         };
 
-        Tab {
-            bindings = <&kp TAB>;
-            key-positions = <22 21>;
-        };
-
         Tri-layer {
             bindings = <&mo 4>;
             key-positions = <33 36>;
-        };
-
-        OO {
-            bindings = <&OO>;
-            key-positions = <28 27>;
         };
     };
 
