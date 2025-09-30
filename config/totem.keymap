@@ -129,7 +129,7 @@
         space_comma: space_comma {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp KP_COMMA &kp SPACE>;
+            bindings = <&kp KP_DOT &kp SPACE>;
             label = "SPACE_COMMA";
         };
     };
@@ -150,10 +150,10 @@
         Whirl_mod {
             display-name = "Whirl";
             bindings = <
-     &kp ESCAPE  &kp G  &kp D            &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
-     &kp N       &kp S  &kp T            &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
-&QU  &kp B       &kp C  &kp P            &kp W      &kp Z              &kp X            &kp L          &kp U          &kp O       &kp Y      &kp COMMA
-                        &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &magic_repeat  &sk LSHIFT
+     &mt LEFT_SHIFT ESCAPE  &kp G  &kp D            &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
+     &kp N                  &kp S  &kp T            &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
+&QU  &kp B                  &kp C  &kp P            &kp W      &kp Z              &kp X            &kp L          &kp U          &kp O       &kp Y      &kp COMMA
+                                   &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &magic_repeat  &sk LSHIFT
             >;
         };
 
@@ -179,10 +179,10 @@
 
         Tri-layer {
             bindings = <
-        &kp F6  &kp F7  &kp F8  &kp F9     &kp F10          &none   &kp F11        &kp F12  &kp F13  &kp F14
-        &none   &none   &none   &ahahahah  &secret_macro    &tog 1  &kp LC(SLASH)  &none    &none    &none
-&trans  &kp F1  &kp F2  &kp F3  &kp F4     &kp F5           &tog 5  &trans         &trans   &trans   &trans   &trans
-                        &trans  &trans     &trans           &trans  &trans         &trans
+        &kp F6  &kp F7  &kp F8  &kp F9     &kp F10          &none   &kp F11  &kp F12  &kp F13  &kp F14
+        &none   &none   &none   &ahahahah  &secret_macro    &tog 1  &none    &none    &none    &none
+&trans  &kp F1  &kp F2  &kp F3  &kp F4     &kp F5           &tog 5  &trans   &trans   &trans   &trans   &trans
+                        &trans  &trans     &trans           &trans  &trans   &trans
             >;
         };
 
