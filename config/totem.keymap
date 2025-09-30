@@ -68,13 +68,13 @@
             max-delay-ms = <5000>;
         };
 
-        magic_j: magic_j {
+        magic_z: magic_z {
             compatible = "zmk,behavior-antecedent-morph";
-            label = "MAGIC_J";
+            label = "MAGIC_Z";
             #binding-cells = <0>;
-            defaults = <&kp J>;
-            antecedents = <O>;
-            bindings = <&kp A>;
+            defaults = <&kp Z>;
+            antecedents = <S R>;
+            bindings = <&kp C &kp R>;
             max-delay-ms = <5000>;
         };
     };
@@ -151,7 +151,7 @@
             bindings = <
        &QU    &kp G  &kp D            &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
        &kp N  &kp S  &kp T            &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
-&kp B  &kp B  &kp C  &kp P            &kp W      &kp Z              &kp X            &kp L          &kp U          &kp O       &kp Y      &kp COMMA
+&kp B  &kp B  &kp C  &kp P            &kp W      &magic_z              &kp X            &kp L          &kp U          &kp O       &kp Y      &kp COMMA
                      &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &magic_repeat  &sk LSHIFT
             >;
         };
