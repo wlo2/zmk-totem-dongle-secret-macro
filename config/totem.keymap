@@ -148,7 +148,7 @@
         };
 
         Whirl_mod {
-            display-name = "Whirl_mod";
+            display-name = "Whirl";
             bindings = <
      &mt LEFT_SHIFT ESCAPE  &kp G  &kp D            &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
      &kp N                  &kp S  &kp T            &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
