@@ -66,13 +66,13 @@
             compatible = "zmk,behavior-antecedent-morph";
             label = "MAGIC_REPEAT_L";
             #binding-cells = <0>;
-
             defaults = <&key_repeat>;
             antecedents = <S P>;
             bindings = <&kp C &kp T>;
             max-delay-ms = <5000>;
         };
     };
+
     combos {
         compatible = "zmk,combos";
 
@@ -143,20 +143,20 @@
         Whirl_mod {
             display-name = "Whirl_mod";
             bindings = <
-     &mt LEFT_SHIFT ESCAPE  &kp G  &kp D            &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
-     &kp N                  &kp S  &kp T            &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
+                 &mt LEFT_SHIFT ESCAPE  &kp G  &kp D            &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
+                 &kp N                  &kp S  &kp T            &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
 &magic_repeat_l  &kp B                  &kp C  &kp P            &kp W      &kp Z              &kp X            &kp L          &kp U          &kp O       &kp Y      &kp COMMA
-                                   &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &magic_repeat  &sk LSHIFT
+                                               &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &magic_repeat  &sk LSHIFT
             >;
         };
 
         Nav {
             display-name = "Nav";
             bindings = <
-           &Remnote_arrow  &kp HOME     &kp UP_ARROW  &kp END            &kp LBRC    &kp RBRC  &trans        &trans         &trans          &kp RIGHT_BRACKET
-           &kp DEL         &kp LEFT     &kp DOWN      &kp RIGHT          &kp LBKT    &kp RBKT  &space_comma  &magic_repeat_l         &QU          &kp LEFT_BRACKET
-&kp TILDE  &kp LEFT_WIN    &kp LS(TAB)  &kp TAB       &kp LC(BACKSPACE)  &kp LPAR    &kp RPAR  &none         &kp RA(COMMA)  &kp RA(PERIOD)  &kp RA(MINUS)      &kp PRINTSCREEN
-                                        &trans        &trans             &trans      &trans    &trans        &trans
+           &Remnote_arrow  &kp HOME     &kp UP_ARROW  &kp END            &kp LBRC    &kp RBRC  &trans  &trans           &trans          &kp RIGHT_BRACKET
+           &kp DEL         &kp LEFT     &kp DOWN      &kp RIGHT          &kp LBKT    &kp RBKT  &QU     &magic_repeat_l  &space_comma    &kp LEFT_BRACKET
+&kp TILDE  &kp LEFT_WIN    &kp LS(TAB)  &kp TAB       &kp LC(BACKSPACE)  &kp LPAR    &kp RPAR  &none   &kp RA(COMMA)    &kp RA(PERIOD)  &kp RA(MINUS)      &kp PRINTSCREEN
+                                        &trans        &magic_repeat_l    &trans      &trans    &trans  &trans
             >;
         };
 
