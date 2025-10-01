@@ -13,13 +13,6 @@
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
 
-#define Base        0
-#define Nav         1
-#define Sym         2
-#define Fun         3
-#define Game        4
-#define Gameplus    5
-
 &mt {
     quick-tap-ms = <190>;
     global-quick-tap;
@@ -148,7 +141,7 @@
         };
 
         Whirl_mod {
-            display-name = "Whirl";
+            display-name = "Whirl_mod";
             bindings = <
      &mt LEFT_SHIFT ESCAPE  &kp G  &kp D            &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
      &kp N                  &kp S  &kp T            &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
