@@ -72,7 +72,7 @@
             bindings = <&kp C &kp T>;
             max-delay-ms = <5000>;
         };
-
+    };
     combos {
         compatible = "zmk,combos";
 
