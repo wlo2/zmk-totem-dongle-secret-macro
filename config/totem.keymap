@@ -68,8 +68,8 @@
             #binding-cells = <0>;
 
             defaults = <&key_repeat>;
-            antecedents = <S P>;
-            bindings = <&kp C &kp T>;
+            antecedents = <S P O>;
+            bindings = <&kp C &kp T &kp A>;
             max-delay-ms = <5000>;
         };
     };
