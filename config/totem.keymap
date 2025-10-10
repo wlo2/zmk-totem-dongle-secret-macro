@@ -103,6 +103,7 @@
             #binding-cells = <0>;
             bindings = <&kp Q &kp U>;
             label = "QU";
+            delay-ms = <5>;
         };
 
         Remnote_arrow: Remnote_arrow {
@@ -110,6 +111,7 @@
             #binding-cells = <0>;
             bindings = <&kp GREATER_THAN &kp GREATER_THAN>;
             label = "REMNOTE_ARROW";
+            delay-ms = <5>;
         };
 
         ahahahah: ahahahah {
@@ -117,6 +119,7 @@
             #binding-cells = <0>;
             bindings = <&kp LBKT &kp F>;
             label = "AHAHAHAH";
+            delay-ms = <5>;
         };
 
         space_comma: space_comma {
@@ -124,6 +127,7 @@
             #binding-cells = <0>;
             bindings = <&kp KP_DOT &kp SPACE>;
             label = "SPACE_COMMA";
+            delay-ms = <5>;
         };
     };
 
