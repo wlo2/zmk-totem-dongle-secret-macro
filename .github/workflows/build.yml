@@ -99,6 +99,8 @@ jobs:
           printf "        #binding-cells = <0>;\n" >> config/secret_macro.overlay
           echo "        bindings = <${{ secrets.STRING_PLACEHOLDER }}>;" >> config/secret_macro.overlay
           printf "        label = \"SECRET_MACRO\";\n" >> config/secret_macro.overlay
+          printf "        wait-ms = <15>;\n" >> config/secret_macro.overlay
+          printf "        tap-ms = <15>;\n" >> config/secret_macro.overlay
           printf "    };\n" >> config/secret_macro.overlay
           printf "};\n" >> config/secret_macro.overlay # This closing brace now closes the 'behaviors' node
 
