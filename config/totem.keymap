@@ -32,14 +32,12 @@
     behaviors {
         macro_because: macro_because {
             compatible = "zmk,behavior-macro";
-            label = "MACRO_BECAUSE";
             #binding-cells = <0>;
             bindings = <&kp E &kp C &kp A &kp U &kp S &kp E>;
         };
 
         macro_ng: macro_ng {
             compatible = "zmk,behavior-macro";
-            label = "MACRO_NG";
             #binding-cells = <0>;
             bindings = <&kp N &kp G>;
         };
@@ -48,7 +46,6 @@
 
         magic_repeat: magic_repeat {
             compatible = "zmk,behavior-antecedent-morph";
-            label = "MAGIC_REPEAT";
             #binding-cells = <0>;
 
             // Default behavior - repeat the last key
@@ -64,7 +61,6 @@
 
         magic_repeat_l: magic_repeat_l {
             compatible = "zmk,behavior-antecedent-morph";
-            label = "MAGIC_REPEAT_L";
             #binding-cells = <0>;
             defaults = <&key_repeat>;
             antecedents = <S P O>;
@@ -102,32 +98,32 @@
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
             bindings = <&kp Q &kp U>;
-            label = "QU";
-            delay-ms = <5>;
+            wait-ms = <5>;
+            tap-ms = <5>;
         };
 
         Remnote_arrow: Remnote_arrow {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
             bindings = <&kp GREATER_THAN &kp GREATER_THAN>;
-            label = "REMNOTE_ARROW";
-            delay-ms = <5>;
+            wait-ms = <5>;
+            tap-ms = <5>;
         };
 
         ahahahah: ahahahah {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
             bindings = <&kp LBKT &kp F>;
-            label = "AHAHAHAH";
-            delay-ms = <5>;
+            wait-ms = <5>;
+            tap-ms = <5>;
         };
 
         space_comma: space_comma {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
             bindings = <&kp KP_DOT &kp SPACE>;
-            label = "SPACE_COMMA";
-            delay-ms = <5>;
+            wait-ms = <5>;
+            tap-ms = <5>;
         };
     };
 
