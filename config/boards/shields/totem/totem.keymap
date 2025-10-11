@@ -59,7 +59,6 @@
         compatible = "zmk,keymap";
 
     Base {
-        label = "Base";
         bindings = <
                 &kp Q       &kp W       &kp E         &kp R         &kp T                         &kp Y        &kp U         &kp I       &kp O               &kp P               
                 &hm LGUI A  &hm LALT S  &hm LCTRL D   &hm LSHIFT F  &kp G                         &kp H  &hm RSHFT J   &hm RCTRL K  &hm RALT L  &hm RGUI SEMICOLON  
@@ -69,7 +68,6 @@
     };
 
     Media {
-        label = "Media";
         bindings = <
                 &trans    &trans    &trans     &trans      &trans               &trans            &trans             &trans           &trans      &trans  
                 &kp LGUI  &kp LALT  &kp LCTRL  &kp LSHIFT  &trans               &trans    &kp C_PREVIOUS  &kp C_VOLUME_DOWN  &kp C_VOLUME_UP  &kp C_NEXT  
@@ -79,7 +77,6 @@
     };
 
     Nav {
-        label = "Nav";
         bindings = <
                 &kp DELETE    &trans    &trans     &trans      &trans                       &trans     &trans         &trans       &trans       &trans  
                 &kp LEFT_GUI  &kp LALT  &kp LCTRL  &kp LSHIFT  &kp SQT                    &kp CAPS   &kp LEFT       &kp DOWN       &kp UP    &kp RIGHT  
@@ -89,7 +86,6 @@
     };
 
     Mouse {
-        label = "Mouse";
         bindings = <
                 &trans  &trans  &trans  &trans  &trans          &trans  &trans  &trans  &trans  &trans  
                 &trans  &trans  &trans  &trans  &trans          &trans  &trans  &trans  &trans  &trans  
@@ -99,7 +95,6 @@
     };
 
     Sym {
-        label = "Sym";
         bindings = <
                 &kp LEFT_BRACE  &kp AMPERSAND  &kp ASTERISK         &kp LEFT_PARENTHESIS   &kp RIGHT_BRACE       &trans      &trans     &trans    &trans    &trans  
                 &kp COLON       &kp DOLLAR     &kp PERCENT          &kp CARET              &kp PLUS              &trans  &kp RSHIFT  &kp RCTRL  &kp RALT  &kp RGUI  
@@ -109,7 +104,6 @@
     };
 
     Num {
-        label = "Num";
         bindings = <
                 &kp LEFT_BRACKET  &kp NUMBER_7  &kp NUMBER_8  &kp NUMBER_9  &kp RIGHT_BRACKET       &trans      &trans     &trans    &trans    &trans  
                 &kp SEMICOLON     &kp NUMBER_4  &kp NUMBER_5  &kp NUMBER_6  &kp EQUAL               &trans  &kp RSHIFT  &kp RCTRL  &kp RALT  &kp RGUI  
@@ -119,7 +113,6 @@
     };
 
     Fun {
-        label = "Fun";
         bindings = <
                 &kp F12     &kp F7   &kp F8      &kp F9   &kp PRINTSCREEN          &trans      &trans     &trans    &trans    &trans  
                 &kp F11     &kp F4   &kp F5      &kp F6   &kp SCROLLLOCK           &trans  &kp RSHIFT  &kp RCTRL  &kp RALT  &kp RGUI  
@@ -129,7 +122,6 @@
     };
 
     Button {
-        label = "Button";
         bindings = <
                 &bt BT_CLR         &bootloader  &trans     &trans      &bt BT_SEL 0         &trans      &trans     &trans  &bootloader    &trans  
                 &kp LGUI           &kp LALT     &kp LCTRL  &kp LSHIFT  &bt BT_SEL 1         &trans  &kp RSHIFT  &kp RCTRL     &kp RALT  &kp RGUI  
@@ -139,7 +131,6 @@
     };
 
     Game {
-        label = "Game";
         bindings = <
                 &kp TAB         &kp Z  &kp X       &kp C         &kp V            &trans  &trans  &trans  &trans  &trans  
                 &kp LEFT_SHIFT  &kp Q  &kp W       &kp E         &kp R            &trans  &trans  &trans  &trans  &trans  
@@ -149,7 +140,6 @@
     };
 
     Gameplus {
-        label = "Gameplus";
         bindings = <
                 &kp NUMBER_1  &kp NUMBER_2  &kp NUMBER_3  &kp NUMBER_4  &kp NUMBER_5        &trans  &trans  &trans  &trans  &trans  
                 &kp G         &trans        &trans        &trans        &kp T               &trans  &trans  &trans  &trans  &trans  
