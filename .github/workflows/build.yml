@@ -98,7 +98,6 @@ jobs:
           printf "        compatible = \"zmk,behavior-macro\";\n" >> config/secret_macro.overlay
           printf "        #binding-cells = <0>;\n" >> config/secret_macro.overlay
           echo "        bindings = <${{ secrets.STRING_PLACEHOLDER }}>;" >> config/secret_macro.overlay
-          printf "        label = \"SECRET_MACRO\";\n" >> config/secret_macro.overlay
           printf "        wait-ms = <10>;\n" >> config/secret_macro.overlay
           printf "        tap-ms = <10>;\n" >> config/secret_macro.overlay
           printf "    };\n" >> config/secret_macro.overlay

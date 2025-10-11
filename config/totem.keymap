@@ -15,7 +15,6 @@
 
 &mt {
     quick-tap-ms = <190>;
-    global-quick-tap;
     flavor = "hold-preferred";
     tapping-term-ms = <200>;
 };
@@ -33,19 +32,19 @@
         ac_on: autocorrect_on {
             compatible = "zmk,behavior-autocorrect-on";
             #binding-cells = <0>;
-            display-name = "AC On";
+            label = "AC_ON";
         };
         
         ac_off: autocorrect_off {
             compatible = "zmk,behavior-autocorrect-off";
             #binding-cells = <0>;
-            display-name = "AC Off";
+            label = "AC_OFF";
         };
         
         ac_togg: autocorrect_toggle {
             compatible = "zmk,behavior-autocorrect-toggle";
             #binding-cells = <0>;
-            display-name = "AC Toggle";
+            label = "AC_TOGG";
         };
 
         macro_because: macro_because {
