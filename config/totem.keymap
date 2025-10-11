@@ -12,7 +12,6 @@
 
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
-#include <behaviors/autocorrect.dtsi>
 
 &mt {
     quick-tap-ms = <190>;
@@ -31,6 +30,24 @@
     #include "secret_macro.overlay"
 
     behaviors {
+        ac_on: autocorrect_on {
+            compatible = "zmk,behavior-autocorrect-on";
+            #binding-cells = <0>;
+            display-name = "AC On";
+        };
+        
+        ac_off: autocorrect_off {
+            compatible = "zmk,behavior-autocorrect-off";
+            #binding-cells = <0>;
+            display-name = "AC Off";
+        };
+        
+        ac_togg: autocorrect_toggle {
+            compatible = "zmk,behavior-autocorrect-toggle";
+            #binding-cells = <0>;
+            display-name = "AC Toggle";
+        };
+
         macro_because: macro_because {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
