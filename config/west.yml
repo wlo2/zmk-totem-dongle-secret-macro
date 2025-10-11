@@ -4,6 +4,8 @@ manifest:
       url-base: https://github.com/zmkfirmware
     - name: ssbb
       url-base: https://github.com/ssbb
+    - name: wlo2
+      url-base: https://github.com/wlo2 
   projects:
     - name: zmk
       remote: zmkfirmware
@@ -12,5 +14,8 @@ manifest:
     - name: zmk-antecedent-morph
       remote: ssbb
       revision: v1
+    - name: zmk_autocorrect
+      remote: wlo2
+      revision: main   
   self:
     path: config
