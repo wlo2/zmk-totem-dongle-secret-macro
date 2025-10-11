@@ -12,6 +12,7 @@
 
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
+#include <behaviors/autocorrect.dtsi>
 
 &mt {
     quick-tap-ms = <190>;
