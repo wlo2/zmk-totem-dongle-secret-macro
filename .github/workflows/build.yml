@@ -15,7 +15,6 @@ jobs:
           - board: seeeduino_xiao_ble
             shield: totem_dongle
             snippet: studio-rpc-usb-uart
-            cmake-args: -DCONFIG_ZMK_STUDIO=y
           - board: seeeduino_xiao_ble
             shield: settings_reset
     steps:
@@ -89,21 +88,21 @@ jobs:
       # Generate secret macro overlay with DIRECT DTS injection
       - name: Generate secret macro overlay
         run: |
-          mkdir -p config
-          # REMOVE this line: printf "/ {\n" > config/secret_macro.overlay
+          mkdir -p boards/shields/totem
+          # REMOVE this line: printf "/ {\n" > boards/shields/totem/secret_macro.overlay
           
           # Start directly with the 'behaviors' node definition
-          printf "behaviors {\n" > config/secret_macro.overlay # THIS IS THE NEW START OF THE FILE
-          printf "    secret_macro: secret_macro {\n" >> config/secret_macro.overlay
-          printf "        compatible = \"zmk,behavior-macro\";\n" >> config/secret_macro.overlay
-          printf "        #binding-cells = <0>;\n" >> config/secret_macro.overlay
-          echo "        bindings = <${{ secrets.STRING_PLACEHOLDER }}>;" >> config/secret_macro.overlay
-          printf "        wait-ms = <10>;\n" >> config/secret_macro.overlay
-          printf "        tap-ms = <10>;\n" >> config/secret_macro.overlay
-          printf "    };\n" >> config/secret_macro.overlay
-          printf "};\n" >> config/secret_macro.overlay # This closing brace now closes the 'behaviors' node
+          printf "behaviors {\n" > boards/shields/totem/secret_macro.overlay # THIS IS THE NEW START OF THE FILE
+          printf "    secret_macro: secret_macro {\n" >> boards/shields/totem/secret_macro.overlay
+          printf "        compatible = \"zmk,behavior-macro\";\n" >> boards/shields/totem/secret_macro.overlay
+          printf "        #binding-cells = <0>;\n" >> boards/shields/totem/secret_macro.overlay
+          echo "        bindings = <${{ secrets.STRING_PLACEHOLDER }}>;" >> boards/shields/totem/secret_macro.overlay
+          printf "        wait-ms = <10>;\n" >> boards/shields/totem/secret_macro.overlay
+          printf "        tap-ms = <10>;\n" >> boards/shields/totem/secret_macro.overlay
+          printf "    };\n" >> boards/shields/totem/secret_macro.overlay
+          printf "};\n" >> boards/shields/totem/secret_macro.overlay # This closing brace now closes the 'behaviors' node
 
-          # REMOVE this line: printf "};\n" >> config/secret_macro.overlay # This was for the outer / {
+          # REMOVE this line: printf "};\n" >> boards/shields/totem/secret_macro.overlay # This was for the outer / {
         env:
           STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
 
