@@ -105,15 +105,15 @@ Add this job after the copy config files step:
 ```yaml
 - name: Generate secret macro overlay
   run: |
-    echo "🔐 Generating secret macro overlay..."
+    echo "Generating secret macro overlay..."
     
     # Create config directory
     mkdir -p "${{ env.base_dir }}/config"
     
     # Check if secret is available
     if [ -z "${{ secrets.STRING_PLACEHOLDER }}" ]; then
-      echo "⚠️  Warning: STRING_PLACEHOLDER secret not set or empty"
-      echo "ℹ️  Creating fallback macro that outputs placeholder text"
+      echo "Warning: STRING_PLACEHOLDER secret not set or empty"
+      echo "Creating fallback macro that outputs placeholder text"
       
       # Create fallback macro
       printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
@@ -126,9 +126,9 @@ Add this job after the copy config files step:
       printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
       printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
       
-      echo "✅ Fallback secret macro created (types 'SECRET')"
+      echo "Fallback secret macro created (types 'SECRET')"
     else
-      echo "✅ STRING_PLACEHOLDER secret found, creating custom macro"
+      echo "STRING_PLACEHOLDER secret found, creating custom macro"
       
       # Create the actual secret macro
       printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
@@ -141,15 +141,15 @@ Add this job after the copy config files step:
       printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
       printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
       
-      echo "✅ Custom secret macro created successfully"
+      echo "Custom secret macro created successfully"
     fi
     
     # Verify the generated file
     if [ -f "${{ env.base_dir }}/config/secret_macro.overlay" ]; then
-      echo "📄 Generated overlay file:"
+      echo "Generated overlay file:"
       cat "${{ env.base_dir }}/config/secret_macro.overlay"
     else
-      echo "❌ Error: Failed to create secret_macro.overlay file"
+      echo "Error: Failed to create secret_macro.overlay file"
       exit 1
     fi
   env:

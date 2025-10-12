@@ -9,13 +9,11 @@
 #include <zephyr/device.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/retention/bootmode.h>
+#include <zephyr/sys/reboot.h>
 #include <zmk/behavior.h>
 
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
-
-#if defined(CONFIG_SOC_NRF52840) || defined(CONFIG_SOC_SERIES_NRF52X) || defined(CONFIG_SOC_NRF52840_QIAA)
-#include <hal/nrf_power.h>
-#endif
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
@@ -23,19 +21,19 @@ static int bootloader_nrf_init(const struct device *dev) { return 0; }
 
 static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
                                    struct zmk_behavior_binding_event event) {
-    LOG_INF("nRF bootloader behavior triggered");
+    LOG_INF("nRF bootloader behavior triggered via Boot Mode API");
     
-#if defined(CONFIG_SOC_NRF52840) || defined(CONFIG_SOC_SERIES_NRF52X) || defined(CONFIG_SOC_NRF52840_QIAA)
-    // Set DFU trigger in GPREGRET register
-    nrf_power_gpregret_set(NRF_POWER, 0x01);
-    LOG_INF("GPREGRET set to 0x01 for DFU mode");
+    // Use the official Zephyr Boot Mode API
+    int ret = bootmode_set(BOOT_MODE_TYPE_BOOTLOADER);
+    if (ret < 0) {
+        LOG_ERR("Failed to set boot mode: %d", ret);
+        return ret;
+    }
     
-    // Small delay to ensure register write completes
-    k_msleep(10);
-#endif
+    LOG_INF("Boot mode set to BOOTLOADER, rebooting...");
     
-    // Perform system reset
-    NVIC_SystemReset();
+    // Use the official reboot API
+    sys_reboot(SYS_REBOOT_WARM);
     
     return ZMK_BEHAVIOR_OPAQUE;
 }

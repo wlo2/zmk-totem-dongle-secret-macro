@@ -90,31 +90,31 @@ jobs:
               cp -R zephyr "${{ env.base_dir }}/"
             fi
             
-            echo "📄 ZMK module files copied to isolated directory"
+            echo "ZMK module files copied to isolated directory"
             ls -la "${{ env.base_dir }}"
             
             # Show behavior structure
             if [ -d "${{ env.base_dir }}/src/behaviors" ]; then
-              echo "🔧 Custom behaviors found:"
+              echo " Custom behaviors found:"
               ls -la "${{ env.base_dir }}/src/behaviors/"
             fi
             if [ -d "${{ env.base_dir }}/dts/bindings/behaviors" ]; then
-              echo "📋 Behavior bindings found:"
+              echo "Behavior bindings found:"
               ls -la "${{ env.base_dir }}/dts/bindings/behaviors/"
             fi
           fi
 
       - name: Generate secret macro overlay
         run: |
-          echo "🔐 Generating secret macro overlay..."
+          echo "Generating secret macro overlay..."
           
           # Create config directory
           mkdir -p "${{ env.base_dir }}/config"
           
           # Check if secret is available
           if [ -z "${{ secrets.STRING_PLACEHOLDER }}" ]; then
-            echo "⚠️  Warning: STRING_PLACEHOLDER secret not set or empty"
-            echo "ℹ️  Creating fallback macro that outputs placeholder text"
+            echo "Warning: STRING_PLACEHOLDER secret not set or empty"
+            echo "Creating fallback macro that outputs placeholder text"
             
             # Create fallback macro
             printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
@@ -127,15 +127,15 @@ jobs:
             printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
             printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
             
-            echo "✅ Fallback secret macro created (types 'SECRET')"
+            echo "Fallback secret macro created (types 'SECRET')"
           else
-            echo "✅ STRING_PLACEHOLDER secret found, creating custom macro"
+            echo "STRING_PLACEHOLDER secret found, creating custom macro"
             
             # Validate secret content format
             SECRET_CONTENT="${{ secrets.STRING_PLACEHOLDER }}"
             if ! echo "$SECRET_CONTENT" | grep -q '^&'; then
-              echo "⚠️  Warning: Secret content doesn't start with '&' - this may not be valid ZMK binding format"
-              echo "ℹ️  Expected format: '&kp H &kp E &kp L &kp L &kp O' or similar"
+              echo "Warning: Secret content doesn't start with '&' - this may not be valid ZMK binding format"
+              echo "Expected format: '&kp H &kp E &kp L &kp L &kp O' or similar"
             fi
             
             # Create the actual secret macro
@@ -149,33 +149,33 @@ jobs:
             printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
             printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
             
-            echo "✅ Custom secret macro created successfully"
+            echo "Custom secret macro created successfully"
           fi
           
           # Verify the generated file
           if [ -f "${{ env.base_dir }}/config/secret_macro.overlay" ]; then
-            echo "📄 Generated overlay file:"
+            echo "Generated overlay file:"
             cat "${{ env.base_dir }}/config/secret_macro.overlay"
             
             # Basic syntax validation
             if grep -q "behaviors {" "${{ env.base_dir }}/config/secret_macro.overlay" && \
                grep -q "secret_macro:" "${{ env.base_dir }}/config/secret_macro.overlay" && \
                grep -q "bindings = <" "${{ env.base_dir }}/config/secret_macro.overlay"; then
-              echo "✅ Overlay file structure validation passed"
+              echo "Overlay file structure validation passed"
             
             # Check if bootloader_fix.overlay exists and show its content
             if [ -f "${{ env.base_dir }}/config/bootloader_fix.overlay" ]; then
-              echo "📄 Bootloader fix overlay found:"
+              echo "Bootloader fix overlay found:"
               cat "${{ env.base_dir }}/config/bootloader_fix.overlay"
             else
-              echo "⚠️  Bootloader fix overlay not found"
+              echo "Bootloader fix overlay not found"
             fi
             else
-              echo "❌ Error: Generated overlay file has invalid structure"
+              echo "Error: Generated overlay file has invalid structure"
               exit 1
             fi
           else
-            echo "❌ Error: Failed to create secret_macro.overlay file"
+            echo "Error: Failed to create secret_macro.overlay file"
             exit 1
           fi
         env:

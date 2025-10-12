@@ -1,5 +1,5 @@
 description: |
-  nRF52840 Bootloader behavior that properly sets GPREGRET register
+  nRF Bootloader behavior using Zephyr Boot Mode API for reliable bootloader entry
 
 compatible: "zmk,behavior-bootloader-nrf"
 
