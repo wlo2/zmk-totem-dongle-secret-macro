@@ -1,156 +1,158 @@
+name: Build ZMK firmware
+
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    name: Fetch Build Keyboards
+    outputs:
+      build_matrix: ${{ env.build_matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch Build Matrix
+        run: |
+          echo "build_matrix=$(yq -oj -I0 'build.yaml')" >> $GITHUB_ENV
+          yq -oj "build.yaml"
+
   build:
     runs-on: ubuntu-latest
     container:
       image: zmkfirmware/zmk-build-arm:stable
+    needs: matrix
+    name: Build
     strategy:
-      matrix:
-        include:
-          - board: seeeduino_xiao_ble
-            shield: totem_left
-          - board: seeeduino_xiao_ble
-            shield: totem_right
-          - board: seeeduino_xiao_ble
-            shield: totem_dongle
-            snippet: studio-rpc-usb-uart
-          - board: seeeduino_xiao_ble
-            shield: settings_reset
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix.outputs.build_matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # - name: Fix keymap include order
-      #   run: |
-      #     KEYMAP_FILE="config/totem.keymap" # Define the path to your keymap file
+      - name: Create build directory
+        run: |
+          echo "build_dir=$(mktemp -d)" >> $GITHUB_ENV
 
-      #     # Define the exact line we want to move/insert.
-      #     # We'll use this precise string for both detection and insertion.
-      #     # Stripping potential newlines ensures it's one clean line.
-      #     SECRET_MACRO_LINE='#include "secret_macro.overlay"' # Removed the comment part for simplicity and robustness.
+      - name: Prepare variables
+        shell: sh -x {0}
+        env:
+          board: ${{ matrix.board }}
+          shield: ${{ matrix.shield }}
+          artifact_name: ${{ matrix.artifact-name }}
+          snippet: ${{ matrix.snippet }}
+        run: |
+          if [ -e zephyr/module.yml ]; then
+            export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
+            new_tmp_dir="${TMPDIR:-/tmp}/zmk-config"
+            mkdir -p "${new_tmp_dir}"
+            echo "base_dir=${new_tmp_dir}" >> $GITHUB_ENV
+          else
+            echo "base_dir=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
+          fi
 
-      #     echo "DEBUG: Processing keymap file: ${KEYMAP_FILE}"
-      #     echo "DEBUG: Target secret macro line: [${SECRET_MACRO_LINE}]"
+          if [ -n "${snippet}" ]; then
+            extra_west_args="-S \"${snippet}\""
+          fi
 
-      #     # 1. Remove all existing instances of the secret_macro include line.
-      #     #    Using '~' as the sed delimiter because SECRET_MACRO_LINE contains '/'.
-      #     #    This ensures we start with a clean slate for insertion.
-      #     sed -i "\~${SECRET_MACRO_LINE}~d" "$KEYMAP_FILE"
-      #     echo "DEBUG: Removed any existing instances of secret_macro_line."
+          echo "zephyr_version=${ZEPHYR_VERSION}" >> $GITHUB_ENV
+          echo "extra_west_args=${extra_west_args}" >> $GITHUB_ENV
+          echo "extra_cmake_args=${shield:+-DSHIELD=\"$shield\"}${zmk_load_arg}" >> $GITHUB_ENV
+          echo "display_name=${shield:+$shield - }${board}" >> $GITHUB_ENV
+          echo "artifact_name=${artifact_name:-${shield:+$shield-}${board}-zmk}" >> $GITHUB_ENV
 
-      #     # 2. Insert the secret_macro include line at the correct position.
-      #     #    We need to escape forward slashes in the lines for sed pattern matching/insertion.
-      #     ESCAPED_SECRET_MACRO_LINE=$(echo "$SECRET_MACRO_LINE" | sed 's/\//\\\//g') # Escapes / to \/
-      #     TARGET_LINE='#include <dt-bindings/zmk/keys.h>'
-      #     ESCAPED_TARGET_LINE=$(echo "$TARGET_LINE" | sed 's/\//\\\//g')
+      - name: Copy config files to isolated temporary directory
+        run: |
+          if [ "${{ env.base_dir }}" != "${GITHUB_WORKSPACE}" ]; then
+            mkdir "${{ env.base_dir }}/config"
+            cp -R config/* "${{ env.base_dir }}/config/"
+          fi
 
-      #     # Check if the target line exists in the file.
-      #     # 'grep -q' runs silently and returns 0 if found, 1 if not.
-      #     if grep -q "$TARGET_LINE" "$KEYMAP_FILE"; then
-      #       echo "DEBUG: Found target line '${TARGET_LINE}'. Inserting secret_macro_line after it."
-      #       # Insert the escaped secret_macro_line after the escaped target_line.
-      #       # 'a\' requires a literal newline after it in the script, then the text.
-      #       sed -i "/${ESCAPED_TARGET_LINE}/a\\
-      #     ${ESCAPED_SECRET_MACRO_LINE}" "$KEYMAP_FILE"
-      #       echo "DEBUG: Inserted secret_macro_line."
-      #     else
-      #       echo "DEBUG: Target line '${TARGET_LINE}' NOT found. Appending secret_macro_line to end as fallback."
-      #       # Fallback: If the target line isn't found, append it to the end of the file.
-      #       echo "$SECRET_MACRO_LINE" >> "$KEYMAP_FILE"
-      #       echo "DEBUG: Appended secret_macro_line."
-      #     fi
-
-      #     echo "Keymap include order fix attempt complete."
-      #   shell: bash
-
-      - name: Cache west modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            modules/
-            tools/
-            zephyr/
-            bootloader/
-          key: ${{ runner.os }}-west-${{ hashFiles('**/west.yml', '**/build.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-west-
-
-      - name: West Init
-        run: west init -l config
-
-      - name: West Update
-        run: west update
-
-      - name: West Zephyr export
-        run: west zephyr-export
-
-      # Generate secret macro overlay with DIRECT DTS injection
       - name: Generate secret macro overlay
         run: |
-          mkdir -p config
-          # REMOVE this line: printf "/ {\n" > config/secret_macro.overlay
-          
-          # Start directly with the 'behaviors' node definition
-          printf "behaviors {\n" > config/secret_macro.overlay # THIS IS THE NEW START OF THE FILE
-          printf "    secret_macro: secret_macro {\n" >> config/secret_macro.overlay
-          printf "        compatible = \"zmk,behavior-macro\";\n" >> config/secret_macro.overlay
-          printf "        #binding-cells = <0>;\n" >> config/secret_macro.overlay
-          echo "        bindings = <${{ secrets.STRING_PLACEHOLDER }}>;" >> config/secret_macro.overlay
-          printf "        wait-ms = <10>;\n" >> config/secret_macro.overlay
-          printf "        tap-ms = <10>;\n" >> config/secret_macro.overlay
-          printf "    };\n" >> config/secret_macro.overlay
-          printf "};\n" >> config/secret_macro.overlay # This closing brace now closes the 'behaviors' node
+          mkdir -p "${{ env.base_dir }}/config"
+          printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
+          printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+          printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+          printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+          echo "        bindings = <${{ secrets.STRING_PLACEHOLDER }}>;" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+          printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+          printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+          printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+          printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
         env:
           STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
 
-      - name: West Build
-        run: |
-          BUILD_CMD="west build -s zmk/app -b ${{ matrix.board }} -- -DZMK_CONFIG=\"${GITHUB_WORKSPACE}/config\" -DSHIELD=${{ matrix.shield }}"
-          if [ "${{ matrix.shield }}" = "totem_dongle" ]; then
-            BUILD_CMD="${BUILD_CMD} ${{ matrix.cmake-args }}"
-          fi
-          eval "$BUILD_CMD"
+      - name: Cache west modules
+        uses: actions/cache@v4
+        continue-on-error: true
+        env:
+          cache_name: cache-zephyr-${{ env.zephyr_version }}-modules
+        with:
+          path: |
+            ${{ env.base_dir }}/modules/
+            ${{ env.base_dir }}/tools/
+            ${{ env.base_dir }}/zephyr/
+            ${{ env.base_dir }}/bootloader/
+            ${{ env.base_dir }}/zmk/
+          key: ${{ runner.os }}-build-${{ env.cache_name }}-${{ hashFiles('**/west.yml', '**/build.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache_name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
 
-      - name: Upload individual firmware artifact for collection
+      - name: West Init
+        working-directory: ${{ env.base_dir }}
+        run: west init -l "${{ env.base_dir }}/config"
+
+      - name: West Update
+        working-directory: ${{ env.base_dir }}
+        run: west update --fetch-opt=--filter=tree:0
+
+      - name: West Zephyr export
+        working-directory: ${{ env.base_dir }}
+        run: west zephyr-export
+
+      - name: West Build (${{ env.display_name }})
+        working-directory: ${{ env.base_dir }}
+        shell: sh -x {0}
+        run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${{ env.base_dir }}/config ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
+
+      - name: ${{ env.display_name }} Kconfig file
+        run: |
+          if [ -f "${{ env.build_dir }}/zephyr/.config" ]
+          then
+            grep -v -e "^#" -e "^$" "${{ env.build_dir }}/zephyr/.config" | sort
+          else
+            echo "No Kconfig output"
+          fi
+        if: ${{ !cancelled() }}
+
+      - name: Rename artifacts
+        shell: sh -x {0}
+        run: |
+          mkdir "${{ env.build_dir }}/artifacts"
+          if [ -f "${{ env.build_dir }}/zephyr/zmk.uf2" ]
+          then
+            cp "${{ env.build_dir }}/zephyr/zmk.uf2" "${{ env.build_dir }}/artifacts/${{ env.artifact_name }}.uf2"
+          elif [ -f "${{ env.build_dir }}/zephyr/zmk.bin" ]
+          then
+            cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/${{ env.artifact_name }}.bin"
+          fi
+
+      - name: Archive (${{ env.display_name }})
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.shield || 'no-shield' }}-${{ matrix.board }}
-          path: build/zephyr/zmk.uf2
+          name: artifact-${{ env.artifact_name }}
+          path: ${{ env.build_dir }}/artifacts
 
-  combine_firmwares:
+  merge:
     runs-on: ubuntu-latest
     needs: build
+    name: Merge Output Artifacts
     steps:
-      - name: Download all firmware artifacts
-        uses: actions/download-artifact@v4
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
         with:
-          path: all_firmwares_downloaded
-          pattern: firmware-*
-
-      - name: List downloaded files (for debugging - optional)
-        run: ls -R all_firmwares_downloaded
-
-      - name: Prepare firmware files for final archive
-        run: |
-          mkdir -p final_firmwares_directory
-
-          for full_path_uf2 in $(find all_firmwares_downloaded -name "zmk.uf2"); do
-            artifact_dir=$(dirname "$full_path_uf2")
-            base_name=$(basename "$artifact_dir" | sed 's/^firmware-//')
-            new_uf2_name="${base_name}-zmk.uf2"
-            cp "$full_path_uf2" "final_firmwares_directory/$new_uf2_name"
-          done
-
-      - name: Get formatted timestamp for archive name
-        id: timestamp_generator
-        run: |
-          formatted_time=$(date -u +%d%m%Y_%H%M)
-          echo "ARTIFACT_NAME=zmk_$formatted_time" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Upload combined firmware archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
-          path: final_firmwares_directory/
+          name: firmware
+          pattern: artifact-*
+          delete-merged: true
