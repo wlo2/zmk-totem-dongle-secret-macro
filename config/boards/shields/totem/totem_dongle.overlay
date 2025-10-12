@@ -1,7 +1,7 @@
 #include "totem.dtsi"
 
 / {
-    mock_kscan: mock_kscan {
+    kscan0: kscan_0 {
         compatible = "zmk,kscan-mock";
         columns = <0>;
         rows = <0>;
@@ -10,5 +10,5 @@
 };
 
 &default_layout {
-    kscan = <&mock_kscan>;
+    kscan = <&kscan0>;
 };
