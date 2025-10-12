@@ -1,15 +1,17 @@
 /*
  * Bootloader fix for Seeed XIAO nRF52840
- * Simple override of the bootloader behavior
+ * 
+ * Let's try the simplest approach - just force the bootloader behavior
+ * to use a different reset type and see what happens.
  */
 
 / {
     behaviors {
-        // Override the default bootloader behavior to use type 2
+        // Override the default bootloader behavior
         bootloader {
             compatible = "zmk,behavior-reset";
             #binding-cells = <0>;
-            type = <2>; // Force bootloader mode instead of normal reset
+            type = <1>; // Try cold reset instead of warm reset
         };
     };
 };
