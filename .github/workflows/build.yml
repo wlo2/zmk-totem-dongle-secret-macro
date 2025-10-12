@@ -74,6 +74,17 @@ jobs:
           if [ "${{ env.base_dir }}" != "${GITHUB_WORKSPACE}" ]; then
             mkdir "${{ env.base_dir }}/config"
             cp -R config/* "${{ env.base_dir }}/config/"
+            
+            # Copy module files for bootloader fix
+            if [ -f "CMakeLists.txt" ]; then
+              cp CMakeLists.txt "${{ env.base_dir }}/"
+            fi
+            if [ -f "Kconfig" ]; then
+              cp Kconfig "${{ env.base_dir }}/"
+            fi
+            if [ -d "src" ]; then
+              cp -R src "${{ env.base_dir }}/"
+            fi
           fi
 
       - name: Generate secret macro overlay
