@@ -3,7 +3,7 @@ description: |
 
 compatible: "zmk,behavior-bootloader-nrf"
 
-include: one_param.yaml
+include: base.yaml
 
 properties:
   "#binding-cells":

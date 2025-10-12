@@ -1,3 +1,6 @@
 build:
+  cmake: .
   settings:
     board_root: .
+    # Enables custom DTS bindings
+    dts_root: .
