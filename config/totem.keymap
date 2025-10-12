@@ -13,6 +13,7 @@
 #include <behaviors/autocorrect.dtsi>
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
+#include "bootloader_fix.dtsi"
 
 &mt {
     quick-tap-ms = <190>;
@@ -83,7 +84,7 @@
         };
 
         Bootloader {
-            bindings = <&bootloader>;
+            bindings = <&bootloader_nrf>;
             key-positions = <2 4>;
         };
 

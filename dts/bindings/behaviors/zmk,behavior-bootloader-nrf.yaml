@@ -1,0 +1,10 @@
+description: |
+  nRF52840 Bootloader behavior that properly sets GPREGRET register
+
+compatible: "zmk,behavior-bootloader-nrf"
+
+include: one_param.yaml
+
+properties:
+  "#binding-cells":
+    const: 0

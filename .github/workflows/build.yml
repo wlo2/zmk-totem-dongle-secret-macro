@@ -72,8 +72,36 @@ jobs:
       - name: Copy config files to isolated temporary directory
         run: |
           if [ "${{ env.base_dir }}" != "${GITHUB_WORKSPACE}" ]; then
+            # Copy config files
             mkdir "${{ env.base_dir }}/config"
             cp -R config/* "${{ env.base_dir }}/config/"
+            
+            # Copy ZMK module structure for custom behavior
+            if [ -f "CMakeLists.txt" ]; then
+              cp CMakeLists.txt "${{ env.base_dir }}/"
+            fi
+            if [ -d "src" ]; then
+              cp -R src "${{ env.base_dir }}/"
+            fi
+            if [ -d "dts" ]; then
+              cp -R dts "${{ env.base_dir }}/"
+            fi
+            if [ -d "zephyr" ]; then
+              cp -R zephyr "${{ env.base_dir }}/"
+            fi
+            
+            echo "📄 ZMK module files copied to isolated directory"
+            ls -la "${{ env.base_dir }}"
+            
+            # Show behavior structure
+            if [ -d "${{ env.base_dir }}/src/behaviors" ]; then
+              echo "🔧 Custom behaviors found:"
+              ls -la "${{ env.base_dir }}/src/behaviors/"
+            fi
+            if [ -d "${{ env.base_dir }}/dts/bindings/behaviors" ]; then
+              echo "📋 Behavior bindings found:"
+              ls -la "${{ env.base_dir }}/dts/bindings/behaviors/"
+            fi
           fi
 
       - name: Generate secret macro overlay
@@ -134,6 +162,14 @@ jobs:
                grep -q "secret_macro:" "${{ env.base_dir }}/config/secret_macro.overlay" && \
                grep -q "bindings = <" "${{ env.base_dir }}/config/secret_macro.overlay"; then
               echo "✅ Overlay file structure validation passed"
+            
+            # Check if bootloader_fix.overlay exists and show its content
+            if [ -f "${{ env.base_dir }}/config/bootloader_fix.overlay" ]; then
+              echo "📄 Bootloader fix overlay found:"
+              cat "${{ env.base_dir }}/config/bootloader_fix.overlay"
+            else
+              echo "⚠️  Bootloader fix overlay not found"
+            fi
             else
               echo "❌ Error: Generated overlay file has invalid structure"
               exit 1
