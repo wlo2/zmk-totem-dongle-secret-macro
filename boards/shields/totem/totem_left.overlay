@@ -1,4 +1,10 @@
-#include "totem_with_kscan0.dtsi"
+#include "totem.dtsi"
+
+/ {
+    chosen {
+        zmk,kscan = &kscan0;
+    };
+};
 
 &kscan0 {
     col-gpios
@@ -8,8 +14,4 @@
         , <&xiao_d 9 GPIO_ACTIVE_HIGH>
         , <&xiao_d 8 GPIO_ACTIVE_HIGH>
         ;
-};
-
-&default_layout {
-    kscan = <&kscan0>;
 };
