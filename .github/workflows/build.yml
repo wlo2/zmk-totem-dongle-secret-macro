@@ -101,8 +101,6 @@ jobs:
           printf "        tap-ms = <10>;\n" >> config/secret_macro.overlay
           printf "    };\n" >> config/secret_macro.overlay
           printf "};\n" >> config/secret_macro.overlay # This closing brace now closes the 'behaviors' node
-
-          # REMOVE this line: printf "};\n" >> boards/shields/totem/secret_macro.overlay # This was for the outer / {
         env:
           STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
 

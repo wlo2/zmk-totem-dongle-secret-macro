@@ -18,4 +18,4 @@ manifest:
       remote: wlo2
       revision: main   
   self:
-    path: .
+    path: config
