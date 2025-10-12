@@ -6,7 +6,7 @@ You can now include sensitive macros in your firmware builds via repository secr
 
 The build system automatically generates a `secret_macro` behavior during GitHub Actions builds using repository secrets. This allows you to include passwords, API keys, personal shortcuts, or other sensitive key sequences without committing them to your public codebase.
 
-### Technical Implementation
+### Implementation
 
 1. **Isolated Build Environment**: Config files are copied to a temporary directory to avoid contaminating the workspace
 2. **Dynamic Overlay Generation**: A `secret_macro.overlay` file is generated at build time with your secret content
@@ -31,7 +31,7 @@ The system creates a macro with these specifications:
 
 ### 2. Use the Secret Macro in Your Keymap
 
-Add the secret macro to any key position in your keymap:
+Add the `&secret_macro` keycode to any key position in your keymap:
 
 ```dts
 keymap {
@@ -46,6 +46,121 @@ keymap {
     };
 };
 ```
+
+### 3. Adding build jobs
+
+#### Step 3.0: Add the `Prepare Variables Job`
+First, add this job to set up the required environment variables (if you don't already have it):
+
+```yaml
+- name: Prepare variables
+  shell: sh -x {0}
+  env:
+    board: ${{ matrix.board }}
+    shield: ${{ matrix.shield }}
+    artifact_name: ${{ matrix.artifact-name }}
+    snippet: ${{ matrix.snippet }}
+  run: |
+    if [ -e zephyr/module.yml ]; then
+      export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
+      new_tmp_dir="${TMPDIR:-/tmp}/zmk-config"
+      mkdir -p "${new_tmp_dir}"
+      echo "base_dir=${new_tmp_dir}" >> $GITHUB_ENV
+    else
+      echo "base_dir=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
+    fi
+
+    if [ -n "${snippet}" ]; then
+      extra_west_args="-S \"${snippet}\""
+    fi
+
+    echo "zephyr_version=${ZEPHYR_VERSION}" >> $GITHUB_ENV
+    echo "extra_west_args=${extra_west_args}" >> $GITHUB_ENV
+    echo "extra_cmake_args=${shield:+-DSHIELD=\"$shield\"}${zmk_load_arg}" >> $GITHUB_ENV
+    echo "display_name=${shield:+$shield - }${board}" >> $GITHUB_ENV
+    echo "artifact_name=${artifact_name:-${shield:+$shield-}${board}-zmk}" >> $GITHUB_ENV
+```
+
+**Key Function**: This job sets the `base_dir` environment variable that determines whether to use an isolated temporary directory or the workspace directory, which is essential for the next steps.
+
+#### Step 3.1: Add the `Copy Config Files Job`
+Add this job to your `.github/workflows/build.yml` file after the "Prepare variables"  step:
+
+```yaml
+- name: Copy config files to isolated temporary directory
+  run: |
+    if [ "${{ env.base_dir }}" != "${GITHUB_WORKSPACE}" ]; then
+      mkdir "${{ env.base_dir }}/config"
+      cp -R config/* "${{ env.base_dir }}/config/"
+    fi
+```
+
+**Requirements**: 
+- Your workflow must have a `base_dir` environment variable set (typically in a "Prepare variables" step)
+- This job should run before any build steps that need the config files
+
+#### Step 3.2: Add the `Secret Macro Generation` Job
+Add this job after the copy config files step:
+
+```yaml
+- name: Generate secret macro overlay
+  run: |
+    echo "🔐 Generating secret macro overlay..."
+    
+    # Create config directory
+    mkdir -p "${{ env.base_dir }}/config"
+    
+    # Check if secret is available
+    if [ -z "${{ secrets.STRING_PLACEHOLDER }}" ]; then
+      echo "⚠️  Warning: STRING_PLACEHOLDER secret not set or empty"
+      echo "ℹ️  Creating fallback macro that outputs placeholder text"
+      
+      # Create fallback macro
+      printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "        bindings = <&kp S &kp E &kp C &kp R &kp E &kp T>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      
+      echo "✅ Fallback secret macro created (types 'SECRET')"
+    else
+      echo "✅ STRING_PLACEHOLDER secret found, creating custom macro"
+      
+      # Create the actual secret macro
+      printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      echo "        bindings = <${{ secrets.STRING_PLACEHOLDER }}>;" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      
+      echo "✅ Custom secret macro created successfully"
+    fi
+    
+    # Verify the generated file
+    if [ -f "${{ env.base_dir }}/config/secret_macro.overlay" ]; then
+      echo "📄 Generated overlay file:"
+      cat "${{ env.base_dir }}/config/secret_macro.overlay"
+    else
+      echo "❌ Error: Failed to create secret_macro.overlay file"
+      exit 1
+    fi
+  env:
+    STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
+```
+
+#### Step 3.3: Verify Your Workflow Dependencies
+Ensure your workflow has these required elements:
+- A job that sets the `base_dir` environment variable
+- The `secrets.STRING_PLACEHOLDER` reference in the environment section
+- Your build job uses `-DZMK_CONFIG=${{ env.base_dir }}/config` to include the generated overlay
 
 ## Example Use Cases
 
