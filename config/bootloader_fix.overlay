@@ -1,0 +1,19 @@
+/*
+ * Bootloader fix for Seeed XIAO nRF52840
+ * 
+ * This overlay modifies the existing bootloader behavior to use
+ * a custom reboot type that triggers DFU mode entry.
+ * 
+ * Usage: Use &bootloader normally in your keymap - this fix is automatic
+ */
+
+/ {
+    behaviors {
+        // Override the default bootloader behavior
+        bootloader {
+            compatible = "zmk,behavior-reset";
+            #binding-cells = <0>;
+            type = <2>; // Use custom bootloader reboot type instead of default
+        };
+    };
+};
