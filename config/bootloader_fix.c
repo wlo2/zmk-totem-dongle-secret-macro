@@ -9,8 +9,11 @@
 #include <zephyr/sys/reboot.h>
 #include <zephyr/logging/log.h>
 
-#if defined(CONFIG_SOC_NRF52840)
+#if defined(CONFIG_SOC_NRF52840) || defined(CONFIG_SOC_SERIES_NRF52X) || defined(CONFIG_SOC_NRF52840_QIAA)
 #include <hal/nrf_power.h>
+#ifdef CONFIG_NRF_FORCE_RAM_ON_REBOOT
+#include <nrfx_ram_ctrl.h>
+#endif
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
@@ -81,4 +84,4 @@ void sys_arch_reboot(int type)
     }
 }
 
-#endif /* CONFIG_SOC_NRF52840 */
+#endif /* nRF52840 variants */
