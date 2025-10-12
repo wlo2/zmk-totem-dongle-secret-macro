@@ -51,10 +51,11 @@ jobs:
           snippet: ${{ matrix.snippet }}
         run: |
           if [ -e zephyr/module.yml ]; then
-            export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
             new_tmp_dir="${TMPDIR:-/tmp}/zmk-config"
             mkdir -p "${new_tmp_dir}"
             echo "base_dir=${new_tmp_dir}" >> $GITHUB_ENV
+            # Set module path to the isolated directory where we'll copy everything
+            export zmk_load_arg=" -DZMK_EXTRA_MODULES='${new_tmp_dir}'"
           else
             echo "base_dir=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
           fi
@@ -72,10 +73,11 @@ jobs:
       - name: Copy config files to isolated temporary directory
         run: |
           if [ "${{ env.base_dir }}" != "${GITHUB_WORKSPACE}" ]; then
+            # Copy config files
             mkdir "${{ env.base_dir }}/config"
             cp -R config/* "${{ env.base_dir }}/config/"
             
-            # Copy module files for bootloader fix
+            # Copy module files to make this directory a complete ZMK module
             if [ -f "CMakeLists.txt" ]; then
               cp CMakeLists.txt "${{ env.base_dir }}/"
             fi
@@ -85,6 +87,12 @@ jobs:
             if [ -d "src" ]; then
               cp -R src "${{ env.base_dir }}/"
             fi
+            if [ -d "zephyr" ]; then
+              cp -R zephyr "${{ env.base_dir }}/"
+            fi
+            
+            echo "Module files copied to isolated directory"
+            ls -la "${{ env.base_dir }}"
           fi
 
       - name: Generate secret macro overlay
