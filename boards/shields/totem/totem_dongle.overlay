@@ -1,8 +1,13 @@
-#include "totem.dtsi"
+/*
+ * Copyright (c) 2022 The ZMK Contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
 
 / {
     chosen {
         zmk,kscan = &mock_kscan;
+        wakeup-source;
     };
 
     mock_kscan: kscan_1 {
