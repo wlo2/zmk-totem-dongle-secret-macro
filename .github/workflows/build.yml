@@ -69,16 +69,70 @@ jobs:
 
       - name: Generate secret macro overlay
         run: |
+          echo "🔐 Generating secret macro overlay..."
+          
+          # Create config directory
           mkdir -p "${{ env.base_dir }}/config"
-          printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
-          printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-          printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-          printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-          echo "        bindings = <${{ secrets.STRING_PLACEHOLDER }}>;" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-          printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-          printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-          printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-          printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+          
+          # Check if secret is available
+          if [ -z "${{ secrets.STRING_PLACEHOLDER }}" ]; then
+            echo "⚠️  Warning: STRING_PLACEHOLDER secret not set or empty"
+            echo "ℹ️  Creating fallback macro that outputs placeholder text"
+            
+            # Create fallback macro
+            printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "        bindings = <&kp S &kp E &kp C &kp R &kp E &kp T>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            
+            echo "✅ Fallback secret macro created (types 'SECRET')"
+          else
+            echo "✅ STRING_PLACEHOLDER secret found, creating custom macro"
+            
+            # Validate secret content format
+            SECRET_CONTENT="${{ secrets.STRING_PLACEHOLDER }}"
+            if ! echo "$SECRET_CONTENT" | grep -q '^&'; then
+              echo "⚠️  Warning: Secret content doesn't start with '&' - this may not be valid ZMK binding format"
+              echo "ℹ️  Expected format: '&kp H &kp E &kp L &kp L &kp O' or similar"
+            fi
+            
+            # Create the actual secret macro
+            printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            echo "        bindings = <$SECRET_CONTENT>;" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            
+            echo "✅ Custom secret macro created successfully"
+          fi
+          
+          # Verify the generated file
+          if [ -f "${{ env.base_dir }}/config/secret_macro.overlay" ]; then
+            echo "📄 Generated overlay file:"
+            cat "${{ env.base_dir }}/config/secret_macro.overlay"
+            
+            # Basic syntax validation
+            if grep -q "behaviors {" "${{ env.base_dir }}/config/secret_macro.overlay" && \
+               grep -q "secret_macro:" "${{ env.base_dir }}/config/secret_macro.overlay" && \
+               grep -q "bindings = <" "${{ env.base_dir }}/config/secret_macro.overlay"; then
+              echo "✅ Overlay file structure validation passed"
+            else
+              echo "❌ Error: Generated overlay file has invalid structure"
+              exit 1
+            fi
+          else
+            echo "❌ Error: Failed to create secret_macro.overlay file"
+            exit 1
+          fi
         env:
           STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
 
