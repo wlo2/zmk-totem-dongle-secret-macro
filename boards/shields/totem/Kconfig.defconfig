@@ -11,15 +11,4 @@ config ZMK_BLE
 
 endif
 
-if SHIELD_TOTEM_DONGLE
-
-config ZMK_KEYBOARD_NAME
-    default "TOTEM"
-    
-config ZMK_SPLIT_ROLE_CENTRAL
-    default y
-
-config ZMK_USB
-    default y
-
-endif
+# Dongle-specific config moved to totem_dongle.conf
