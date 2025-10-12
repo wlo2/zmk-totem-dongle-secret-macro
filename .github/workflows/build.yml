@@ -1,6 +1,15 @@
 name: Build ZMK firmware
 
-on: [push, pull_request, workflow_dispatch]
+on: 
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      include_settings_reset:
+        description: 'Build settings reset firmware'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   matrix:

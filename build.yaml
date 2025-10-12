@@ -8,6 +8,3 @@ include:
   - board: seeeduino_xiao_ble
     shield: totem_dongle
     artifact-name: totem_dongle
-  - board: seeeduino_xiao_ble
-    shield: settings_reset
-    artifact-name: settings_reset
