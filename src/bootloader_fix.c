@@ -9,7 +9,7 @@
 #include <zephyr/sys/reboot.h>
 #include <zephyr/logging/log.h>
 
-#ifdef CONFIG_BOOTLOADER_FIX_NRF52840
+#if defined(CONFIG_SOC_NRF52840) || defined(CONFIG_SOC_SERIES_NRF52X) || defined(CONFIG_SOC_NRF52840_QIAA)
 #include <hal/nrf_power.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
@@ -53,4 +53,4 @@ void sys_arch_reboot(int type)
     }
 }
 
-#endif /* CONFIG_BOOTLOADER_FIX_NRF52840 */
+#endif /* nRF52840 variants */

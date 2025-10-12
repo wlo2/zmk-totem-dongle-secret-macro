@@ -86,14 +86,13 @@ jobs:
             if [ -f "CMakeLists.txt" ]; then
               cp CMakeLists.txt "${{ env.base_dir }}/"
             fi
-            if [ -f "Kconfig" ]; then
-              cp Kconfig "${{ env.base_dir }}/"
-            fi
             if [ -d "src" ]; then
               cp -R src "${{ env.base_dir }}/"
             fi
+            # Copy zephyr/module.yml but not the entire zephyr directory to avoid conflicts
             if [ -d "zephyr" ]; then
-              cp -R zephyr "${{ env.base_dir }}/"
+              mkdir -p "${{ env.base_dir }}/zephyr"
+              cp zephyr/module.yml "${{ env.base_dir }}/zephyr/"
             fi
             
             echo "Module files copied to isolated directory"
