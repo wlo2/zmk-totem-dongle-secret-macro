@@ -27,7 +27,7 @@
 };
 
 / {
-    #include "../boards/shields/totem/secret_macro.overlay"
+    #include "secret_macro.overlay"
 
     behaviors {
         macro_because: macro_because {
