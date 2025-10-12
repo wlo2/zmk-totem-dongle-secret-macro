@@ -1,10 +1,4 @@
-/*
- * Copyright (c) 2022 The ZMK Contributors
- *
- * SPDX-License-Identifier: MIT
- */
-
-#include "totem.dtsi"
+#include "totem_with_kscan0.dtsi"
 
 &default_transform {
     col-offset = <5>;
@@ -18,4 +12,8 @@
         , <&xiao_d 5 GPIO_ACTIVE_HIGH>
         , <&xiao_d 4 GPIO_ACTIVE_HIGH>
         ;
+};
+
+&default_layout {
+    kscan = <&kscan0>;
 };
