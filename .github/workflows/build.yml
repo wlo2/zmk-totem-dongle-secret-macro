@@ -77,6 +77,11 @@ jobs:
             mkdir "${{ env.base_dir }}/config"
             cp -R config/* "${{ env.base_dir }}/config/"
             
+            # Copy boards and shields directories for ZMK module structure
+            if [ -d "boards" ]; then
+              cp -R boards "${{ env.base_dir }}/"
+            fi
+            
             # Copy module files to make this directory a complete ZMK module
             if [ -f "CMakeLists.txt" ]; then
               cp CMakeLists.txt "${{ env.base_dir }}/"
@@ -93,6 +98,10 @@ jobs:
             
             echo "Module files copied to isolated directory"
             ls -la "${{ env.base_dir }}"
+            if [ -d "${{ env.base_dir }}/boards" ]; then
+              echo "Boards directory structure:"
+              find "${{ env.base_dir }}/boards" -type d
+            fi
           fi
 
       - name: Generate secret macro overlay
