@@ -150,9 +150,16 @@ jobs:
     needs: build
     name: Merge Output Artifacts
     steps:
+      - name: Get formatted timestamp for archive name
+        id: timestamp_generator
+        run: |
+          formatted_time=$(date -u +%d%m%Y_%H%M)
+          echo "ARTIFACT_NAME=zmk_$formatted_time" >> $GITHUB_OUTPUT
+        shell: bash
+
       - name: Merge Artifacts
         uses: actions/upload-artifact/merge@v4
         with:
-          name: firmware
+          name: ${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
           pattern: artifact-*
           delete-merged: true
