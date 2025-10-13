@@ -51,9 +51,13 @@ jobs:
           snippet: ${{ matrix.snippet }}
         run: |
           # Use pre-baked west workspace inside the container image
-          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk_autocorrect'"
           echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
           echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
+          # Point west to this repo's manifest (config/west.yml) to fetch external modules into base_dir
+          west config manifest.path "${GITHUB_WORKSPACE}/config"
+          west update --fetch-opt=--filter=tree:0
+          # After west update, external modules are in ${base_dir}
+          export zmk_load_arg=" -DZMK_EXTRA_MODULES='/opt/zmk-env/zmk-antecedent-morph;/opt/zmk-env/zmk_autocorrect;${GITHUB_WORKSPACE}'"
 
           if [ -n "${snippet}" ]; then
             extra_west_args="-S \"${snippet}\""
@@ -155,16 +159,12 @@ jobs:
 
       # Pre-baked image already has west workspace; no cache/init/update/export needed
 
-      - name: Checkout zmk_autocorrect module
-        uses: actions/checkout@v4
-        with:
-          repository: wlo2/zmk_autocorrect
-          path: zmk_autocorrect
+      # External modules are fetched by west using config/west.yml above
 
       - name: Patch test platforms for Zephyr 4.x (native_sim)
         run: |
           set -eux
-          find "${GITHUB_WORKSPACE}/zmk_autocorrect/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 | while IFS= read -r -d '' f; do
+          find "/opt/zmk-env/zmk_autocorrect/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 | while IFS= read -r -d '' f; do
             # Normalize any platform_allow to a YAML list using native_sim
             sed -i -E "s/^([[:space:]]*)platform_allow:.*$/\1platform_allow: [native_sim]/" "$f"
           done
@@ -172,7 +172,7 @@ jobs:
       - name: Show patched test platforms
         run: |
           set -eux
-          grep -RIn "platform_allow" "${GITHUB_WORKSPACE}/zmk_autocorrect/tests" || true
+          grep -RIn "platform_allow" "/opt/zmk-env/zmk_autocorrect/tests" || true
 
       # Twister deps are baked into the image; no venv/pip install required
 
@@ -183,7 +183,7 @@ jobs:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
         run: |
           python "${ZEPHYR_BASE}/scripts/twister" \
-            -T "${GITHUB_WORKSPACE}/zmk_autocorrect/tests/autocorrect" \
+            -T "/opt/zmk-env/zmk_autocorrect/tests/autocorrect" \
             -p native_sim --inline-logs -v
 
       - name: West Build (${{ env.display_name }})
