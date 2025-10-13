@@ -177,15 +177,26 @@ jobs:
       - name: Patch test platforms for Zephyr 4.x (native_sim)
         run: |
           set -eux
-          find "${ZMK_AUTOCORRECT_PATH}/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 | while IFS= read -r -d '' f; do
-            # Normalize any platform_allow to a YAML list using native_sim
-            sed -i -E "s/^([[:space:]]*)platform_allow:.*$/\1platform_allow: [native_sim]/" "$f"
-          done
+          echo "Patching test platform_allow in ${ZMK_AUTOCORRECT_PATH}/tests"
+          # Target the specific failing test file
+          TEST_FILE="${ZMK_AUTOCORRECT_PATH}/tests/autocorrect/testcase.yaml"
+          if [ -f "$TEST_FILE" ]; then
+            echo "=== Before patch ==="
+            cat "$TEST_FILE"
+            # Replace any platform_allow line with YAML list format
+            sed -i -E "s/^([[:space:]]*)platform_allow:.*$/\1platform_allow: [native_sim]/" "$TEST_FILE"
+            echo "=== After patch ==="
+            cat "$TEST_FILE"
+          else
+            echo "Test file not found: $TEST_FILE"
+            exit 1
+          fi
 
-      - name: Show patched test platforms
+      - name: Show all test YAML files
         run: |
           set -eux
-          grep -RIn "platform_allow" "${ZMK_AUTOCORRECT_PATH}/tests" || true
+          echo "All YAML/YML files under ${ZMK_AUTOCORRECT_PATH}/tests:"
+          find "${ZMK_AUTOCORRECT_PATH}/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) || true
 
       # Twister deps are baked into the image; no venv/pip install required
 
