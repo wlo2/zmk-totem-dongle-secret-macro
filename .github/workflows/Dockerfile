@@ -8,11 +8,14 @@ RUN west init -m https://github.com/petejohanson/zmk --mr core/move-to-zephyr-4-
     west update --fetch-opt=--filter=tree:0 && \
     west zephyr-export
 
-# Install pip (and venv) in the image, then Twister deps from Zephyr
+# Create venv and install Twister deps into it (PEP 668 compliant)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3-pip python3-venv ca-certificates && \
+    apt-get install -y --no-install-recommends python3-venv ca-certificates && \
     rm -rf /var/lib/apt/lists/* && \
-    python3 -m pip install --upgrade pip && \
-    pip install -r zephyr/scripts/requirements.txt
+    python3 -m venv /opt/venv && \
+    /opt/venv/bin/python -m ensurepip --upgrade && \
+    /opt/venv/bin/pip install --upgrade pip && \
+    /opt/venv/bin/pip install -r zephyr/scripts/requirements.txt
 
-ENV PIP_CACHE_DIR=/tmp/pip-cache
+# Ensure venv is used by default
+ENV PATH="/opt/venv/bin:${PATH}"
