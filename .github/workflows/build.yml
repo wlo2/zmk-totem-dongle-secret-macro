@@ -217,21 +217,34 @@ jobs:
         run: west zephyr-export
 
       - name: Ensure Python venv support
+        working-directory: ${{ env.base_dir }}
         run: |
           apt-get update
           apt-get install -y --no-install-recommends python3-venv ca-certificates
 
-      - name: Create Python venv
+      - name: Create Python venv and install Twister deps
+        working-directory: ${{ env.base_dir }}
         run: |
           python3 -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
-          pip install -r zephyr/scripts/requirements.txt
+          pip install -r zmk/zephyr/scripts/requirements.txt
 
-      - name: Run Twister (ztest)
-        continue-on-error: true
+      - name: Checkout zmk_autocorrect module
+        uses: actions/checkout@v4
+        with:
+          repository: wlo2/zmk_autocorrect
+          path: zmk_autocorrect
+
+      - name: Run unit tests (Twister)
         working-directory: ${{ env.base_dir }}
-        run: ./zephyr/scripts/twister -T tests/autocorrect -p native_posix --inline-logs -v
+        env:
+          ZEPHYR_BASE: zmk/zephyr
+        run: |
+          . .venv/bin/activate
+          python zmk/zephyr/scripts/twister \
+            -T "${GITHUB_WORKSPACE}/zmk_autocorrect/tests/autocorrect" \
+            -p native_posix --inline-logs -v
 
       - name: West Build (${{ env.display_name }})
         working-directory: ${{ env.base_dir }}
