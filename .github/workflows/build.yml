@@ -56,8 +56,13 @@ jobs:
           # Point west to this repo's manifest (config/west.yml) to fetch external modules into base_dir
           west config manifest.path "${GITHUB_WORKSPACE}/config"
           west update --fetch-opt=--filter=tree:0
-          # After west update, external modules are in ${base_dir}
-          export zmk_load_arg=" -DZMK_EXTRA_MODULES='/opt/zmk-env/zmk-antecedent-morph;/opt/zmk-env/zmk_autocorrect;${GITHUB_WORKSPACE}'"
+          # Discover module paths from west; Zephyr will auto-register them as modules.
+          ZMK_AUTOCORRECT_PATH=$(west list -f "{path}" zmk_autocorrect)
+          ANTE_MORPH_PATH=$(west list -f "{path}" zmk-antecedent-morph || true)
+          echo "ZMK_AUTOCORRECT_PATH=${ZMK_AUTOCORRECT_PATH}" >> $GITHUB_ENV
+          echo "ANTE_MORPH_PATH=${ANTE_MORPH_PATH}" >> $GITHUB_ENV
+          # Only this repo needs to be listed in ZMK_EXTRA_MODULES; other modules are registered via west.
+          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
 
           if [ -n "${snippet}" ]; then
             extra_west_args="-S \"${snippet}\""
@@ -164,7 +169,7 @@ jobs:
       - name: Patch test platforms for Zephyr 4.x (native_sim)
         run: |
           set -eux
-          find "/opt/zmk-env/zmk_autocorrect/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 | while IFS= read -r -d '' f; do
+          find "${ZMK_AUTOCORRECT_PATH}/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 | while IFS= read -r -d '' f; do
             # Normalize any platform_allow to a YAML list using native_sim
             sed -i -E "s/^([[:space:]]*)platform_allow:.*$/\1platform_allow: [native_sim]/" "$f"
           done
@@ -172,7 +177,7 @@ jobs:
       - name: Show patched test platforms
         run: |
           set -eux
-          grep -RIn "platform_allow" "/opt/zmk-env/zmk_autocorrect/tests" || true
+          grep -RIn "platform_allow" "${ZMK_AUTOCORRECT_PATH}/tests" || true
 
       # Twister deps are baked into the image; no venv/pip install required
 
@@ -183,7 +188,7 @@ jobs:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
         run: |
           python "${ZEPHYR_BASE}/scripts/twister" \
-            -T "/opt/zmk-env/zmk_autocorrect/tests/autocorrect" \
+            -T "${ZMK_AUTOCORRECT_PATH}/tests/autocorrect" \
             -p native_sim --inline-logs -v
 
       - name: West Build (${{ env.display_name }})
