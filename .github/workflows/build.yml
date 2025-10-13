@@ -205,6 +205,7 @@ jobs:
         working-directory: /opt/zmk-env
         env:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
+          ZEPHYR_MODULES: ${{ env.ZMK_AUTOCORRECT_PATH }}
         run: |
           python "${ZEPHYR_BASE}/scripts/twister" \
             -T "${ZMK_AUTOCORRECT_PATH}/tests/autocorrect" \

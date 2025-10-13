@@ -5,26 +5,9 @@
  */
 #include "totem.dtsi"
 
-&gpregret1 {
-    status = "okay";
-    adafruit_boot_retention: retention@0 {
-        compatible = "zephyr,retention";
-        status = "okay";
-        reg = <0x0 0x1>;
-    };
-};
-
 / {
     chosen {
         zmk,kscan = &mock_kscan;
-        /* Boot-mode chosen is used for MCUboot serial-recovery; UF2 also uses retention for Adafruit magic. */
-        zephyr,boot-mode = &adafruit_boot_retention;
-        zmk,magic-boot-mode = &adafruit_boot_retention;
-    };
-
-    magic_mapper: bootmode_magic {
-        compatible = "zmk,bootmode-to-magic-mapper";
-        status = "okay";
     };
 
     mock_kscan: kscan_1 {
