@@ -229,7 +229,7 @@ jobs:
 
       - name: Create Python venv and install Twister deps
         env:
-          ZEPHYR_BASE: ${{ github.workspace }}/zmk_autocorrect/zmk/zephyr
+          ZEPHYR_BASE: ${{ env.base_dir }}/zephyr
         run: |
           python3 -m venv .venv
           . .venv/bin/activate
@@ -238,7 +238,7 @@ jobs:
 
       - name: Run unit tests (Twister)
         env:
-          ZEPHYR_BASE: ${{ github.workspace }}/zmk_autocorrect/zmk/zephyr
+          ZEPHYR_BASE: ${{ env.base_dir }}/zephyr
         run: |
           . .venv/bin/activate
           python "$ZEPHYR_BASE/scripts/twister" \
