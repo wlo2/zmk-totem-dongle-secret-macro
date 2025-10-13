@@ -50,10 +50,10 @@ jobs:
           artifact_name: ${{ matrix.artifact-name }}
           snippet: ${{ matrix.snippet }}
         run: |
-          # Always build against the Zephyr tree vendored in this repo
+          # Use pre-baked west workspace inside the container image
           export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
-          echo "base_dir=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
-          echo "ZEPHYR_BASE=${GITHUB_WORKSPACE}/zephyr-repo" >> $GITHUB_ENV
+          echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
+          echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
 
           if [ -n "${snippet}" ]; then
             extra_west_args="-S \"${snippet}\""
@@ -178,7 +178,7 @@ jobs:
 
       - name: Run unit tests (Twister)
         continue-on-error: true
-        working-directory: ${{ github.workspace }}
+        working-directory: /opt/zmk-env
         env:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
         run: |
@@ -187,11 +187,11 @@ jobs:
             -p native_sim --inline-logs -v
 
       - name: West Build (${{ env.display_name }})
-        working-directory: ${{ github.workspace }}
+        working-directory: /opt/zmk-env
         shell: sh -x {0}
         env:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
-        run: west build -s zmk-repo/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
+        run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
 
       - name: ${{ env.display_name }} Kconfig file
         run: |
