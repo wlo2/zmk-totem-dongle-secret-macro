@@ -50,15 +50,10 @@ jobs:
           artifact_name: ${{ matrix.artifact-name }}
           snippet: ${{ matrix.snippet }}
         run: |
-          if [ -e zephyr/module.yml ]; then
-            export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
-            # Use pre-baked west workspace inside the container image
-            echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
-            echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
-          else
-            echo "base_dir=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
-            echo "ZEPHYR_BASE=zephyr" >> $GITHUB_ENV
-          fi
+          # Always build against the Zephyr tree vendored in this repo
+          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
+          echo "base_dir=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
+          echo "ZEPHYR_BASE=${GITHUB_WORKSPACE}/zephyr-repo/zephyr" >> $GITHUB_ENV
 
           if [ -n "${snippet}" ]; then
             extra_west_args="-S \"${snippet}\""
@@ -69,6 +64,14 @@ jobs:
           echo "extra_cmake_args=${shield:+-DSHIELD=\"$shield\"}${zmk_load_arg}" >> $GITHUB_ENV
           echo "display_name=${shield:+$shield - }${board}" >> $GITHUB_ENV
           echo "artifact_name=${artifact_name:-${shield:+$shield-}${board}-zmk}" >> $GITHUB_ENV
+
+      - name: Verify Zephyr tree
+        run: |
+          set -eux
+          echo "ZEPHYR_BASE=${ZEPHYR_BASE}"
+          test -d "${ZEPHYR_BASE}" || (echo "Missing ZEPHYR_BASE dir" && exit 1)
+          ls -al "${ZEPHYR_BASE}" | head -n 50 || true
+          test -f "${ZEPHYR_BASE}/share/zephyr-package/cmake/ZephyrConfig.cmake" || (echo "Missing ZephyrConfig.cmake under ${ZEPHYR_BASE}/share/zephyr-package/cmake" && exit 1)
 
       - name: Skip copying into pre-baked workspace (no-op)
         run: echo "Using repo via ZMK_EXTRA_MODULES and config from GITHUB_WORKSPACE"
@@ -161,29 +164,34 @@ jobs:
       - name: Patch test platforms for Zephyr 4.x (native_sim)
         run: |
           set -eux
-          find "${GITHUB_WORKSPACE}/zmk_autocorrect/tests" -name 'testcase.yaml' -print0 | while IFS= read -r -d '' f; do
+          find "${GITHUB_WORKSPACE}/zmk_autocorrect/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 | while IFS= read -r -d '' f; do
             # Normalize any platform_allow to a YAML list using native_sim
             sed -i -E "s/^([[:space:]]*)platform_allow:.*$/\1platform_allow: [native_sim]/" "$f"
           done
+
+      - name: Show patched test platforms
+        run: |
+          set -eux
+          grep -RIn "platform_allow" "${GITHUB_WORKSPACE}/zmk_autocorrect/tests" || true
 
       # Twister deps are baked into the image; no venv/pip install required
 
       - name: Run unit tests (Twister)
         continue-on-error: true
-        working-directory: /opt/zmk-env
+        working-directory: ${{ github.workspace }}
         env:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
         run: |
-          python zephyr/scripts/twister \
+          python "${ZEPHYR_BASE}/scripts/twister" \
             -T "${GITHUB_WORKSPACE}/zmk_autocorrect/tests/autocorrect" \
             -p native_sim --inline-logs -v
 
       - name: West Build (${{ env.display_name }})
-        working-directory: /opt/zmk-env
+        working-directory: ${{ github.workspace }}
         shell: sh -x {0}
         env:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
-        run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/cmake ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
+        run: west build -s zmk-repo/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
 
       - name: ${{ env.display_name }} Kconfig file
         run: |
