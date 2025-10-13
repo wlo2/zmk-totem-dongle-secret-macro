@@ -54,8 +54,10 @@ jobs:
             export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
             # Use pre-baked west workspace inside the container image
             echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
+            echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
           else
             echo "base_dir=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
+            echo "ZEPHYR_BASE=zephyr" >> $GITHUB_ENV
           fi
 
           if [ -n "${snippet}" ]; then
@@ -162,15 +164,17 @@ jobs:
         continue-on-error: true
         working-directory: /opt/zmk-env
         env:
-          ZEPHYR_BASE: zephyr
+          ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
         run: |
           python zephyr/scripts/twister \
             -T "${GITHUB_WORKSPACE}/zmk_autocorrect/tests/autocorrect" \
-            -p native_posix --inline-logs -v
+            -p native_sim --inline-logs -v
 
       - name: West Build (${{ env.display_name }})
         working-directory: /opt/zmk-env
         shell: sh -x {0}
+        env:
+          ZEPHYR_BASE: zephyr
         run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
 
       - name: ${{ env.display_name }} Kconfig file
