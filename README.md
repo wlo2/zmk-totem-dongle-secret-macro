@@ -210,17 +210,33 @@ tbd
 # Attributions
 Initially forked from https://github.com/eigatech/zmk-config
 
-## Bootloader Support (Zephyr 4.1)
+## `&bootloader` Support for nRF52840 with Adafruit bootloader (Zephyr 4.1)
 
-This configuration now relies on ZMK's native bootloader support available in the Zephyr 4.1 branch. Use the standard `&bootloader` behavior in your keymaps to enter the device bootloader.
+This configuration uses ZMK's bootloader support from the Zephyr 4.1 branch (`petejohanson/zmk@core/move-to-zephyr-4-1`). The `&bootloader` behavior allows entering the device bootloader from a keypress.
 
-- **Behavior**: `&bootloader`
-- **Boards**: Use `xiao_ble` board definition for Seeeduino XIAO BLE and BLE Sense
-- **UF2 requirement**: Entering the UF2 bootloader on XIAO BLE boards requires the Adafruit/TinyUF2 bootloader version 0.9.2 or later. Older Seeed UF2 bootloaders (e.g. 0.6.x) may not support this behavior.
+### Configuration
 
-Example keymap usage:
+#### Dongle Configuration
 
-```dts
-// ... inside a bindings list
-&bootloader
+The dongle is configured to support bootloader entry via retention memory and magic mapper:
+
+**`boards/shields/totem/totem_dongle.conf`:**
+```conf
+CONFIG_RETENTION=y
+CONFIG_RETENTION_BOOT_MODE=y
+CONFIG_RETAINED_MEM=y
+CONFIG_ZMK_BOOTMODE_MAGIC_VALUE_BOOTLOADER_TYPE_ADAFRUIT_NRF52=y
 ```
+
+### Usage
+
+#### Triggering Bootloader on Dongle from periferals
+
+> [!IMPORTANT]
+> Requires to be called from macro (for `Central` locality) 
+
+### Requirements
+
+- **Boards**: `xiao_ble` board definition for Seeeduino XIAO BLE and BLE Sense
+- **UF2 bootloader**: Adafruit/TinyUF2 bootloader version 0.9.2 or later required on XIAO BLE boards. Older Seeed UF2 bootloaders (e.g. 0.6.x) may not support this behavior.
+- **ZMK branch**: `petejohanson/zmk@core/move-to-zephyr-4-1` with Zephyr 4.1 support (still in beta)

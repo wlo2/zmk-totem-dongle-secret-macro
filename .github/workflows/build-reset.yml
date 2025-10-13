@@ -1,5 +1,4 @@
 name: Build and Push Prebaked image and Settings Reset
-# test
 
 on:
   workflow_dispatch:
@@ -79,7 +78,7 @@ jobs:
 
       - name: Build summary
         run: |
-          echo "## Settings Reset Firmware Built Successfully 🔧" >> $GITHUB_STEP_SUMMARY
+          echo "## Settings Reset Firmware Built Successfully" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Reason:** ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
