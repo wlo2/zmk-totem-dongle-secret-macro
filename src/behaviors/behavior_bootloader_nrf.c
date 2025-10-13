@@ -23,16 +23,14 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
                                    struct zmk_behavior_binding_event event) {
     LOG_INF("nRF bootloader behavior triggered via Boot Mode API");
     
-    // Use the official Zephyr Boot Mode API
-    int ret = bootmode_set(BOOT_MODE_TYPE_BOOTLOADER);
+    /* Adafruit UF2 bootloader magic value for direct entry */
+    int ret = bootmode_set(0x57);
     if (ret < 0) {
-        LOG_ERR("Failed to set boot mode: %d", ret);
-        return ret;
+        LOG_ERR("Failed to set boot mode (0x57): %d", ret);
     }
+
+    LOG_INF("Boot mode set to 0x57, rebooting...");
     
-    LOG_INF("Boot mode set to BOOTLOADER, rebooting...");
-    
-    // Use the official reboot API
     sys_reboot(SYS_REBOOT_WARM);
     
     return ZMK_BEHAVIOR_OPAQUE;
@@ -46,6 +44,7 @@ static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
 static const struct behavior_driver_api behavior_bootloader_nrf_driver_api = {
     .binding_pressed = on_keymap_binding_pressed,
     .binding_released = on_keymap_binding_released,
+    .locality = BEHAVIOR_LOCALITY_CENTRAL,
 };
 
 BEHAVIOR_DT_INST_DEFINE(0, bootloader_nrf_init, NULL, NULL, NULL, APPLICATION,
