@@ -61,8 +61,8 @@ jobs:
           ANTE_MORPH_PATH=$(west list -f "{path}" zmk-antecedent-morph || true)
           echo "ZMK_AUTOCORRECT_PATH=${ZMK_AUTOCORRECT_PATH}" >> $GITHUB_ENV
           echo "ANTE_MORPH_PATH=${ANTE_MORPH_PATH}" >> $GITHUB_ENV
-          # Only this repo needs to be listed in ZMK_EXTRA_MODULES; other modules are registered via west.
-          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
+          # Include this repo and zmk_autocorrect in ZMK_EXTRA_MODULES so DT includes under module app/ resolve.
+          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${ZMK_AUTOCORRECT_PATH}'"
 
           if [ -n "${snippet}" ]; then
             extra_west_args="-S \"${snippet}\""
