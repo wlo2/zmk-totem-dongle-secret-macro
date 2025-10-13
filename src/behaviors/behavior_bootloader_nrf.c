@@ -12,6 +12,7 @@
 #include <zephyr/sys/reboot.h>
 #include <zmk/behavior.h>
 #include <zephyr/retention/bootmode.h>
+#include <zephyr/drivers/retained_mem.h>
 
 #if defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
 #include <hal/nrf_power.h>
@@ -29,15 +30,31 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     ARG_UNUSED(event);
 
 #if defined(CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_UF2)
-    LOG_INF("Bootloader (UF2) trigger: writing GPREGRET=0x57 and rebooting");
+    LOG_INF("Bootloader (UF2) trigger: writing GPREGRET=0x57 and rebooting (cold)");
+
+    /* Prefer Zephyr retained_mem API if available */
+    const struct device *gp = DEVICE_DT_GET_ONE(nordic_nrf_gpregret);
+    if (device_is_ready(gp)) {
+        uint8_t val = 0x57;
+        int wret = retained_mem_write(gp, 0, &val, 1);
+        if (wret < 0) {
+            LOG_ERR("retained_mem_write failed: %d", wret);
+        }
+    } else {
+        LOG_WRN("retained_mem device not ready; falling back to direct GPREGRET write (Nordic only)");
 
 #if defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
-    NRF_POWER->GPREGRET = 0x57;
+        NRF_POWER->GPREGRET = 0x57;
 #else
-    LOG_WRN("UF2 GPREGRET write requested on non-Nordic SoC; skipping write");
+        LOG_WRN("UF2 GPREGRET write requested on non-Nordic SoC; skipping write");
 #endif
+    }
 
-    sys_reboot(SYS_REBOOT_WARM);
+#if defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
+    LOG_INF("GPREGRET now: 0x%02x", (int)NRF_POWER->GPREGRET);
+#endif
+    LOG_INF("Locality: CENTRAL");
+    sys_reboot(SYS_REBOOT_COLD);
     return ZMK_BEHAVIOR_OPAQUE;
 
 #elif defined(CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_MCUBOOT)

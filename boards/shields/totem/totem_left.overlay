@@ -11,6 +11,7 @@
 
 / {
     chosen {
+        /* Boot-mode chosen is only used for MCUboot serial-recovery flow; UF2 mode does not require it. */
         zephyr,boot-mode = &boot_mode0;
     };
 };
