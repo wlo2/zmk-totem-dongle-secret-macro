@@ -216,6 +216,11 @@ jobs:
         working-directory: ${{ env.base_dir }}
         run: west zephyr-export
 
+      - name: Set up Python deps for Zephyr Twister
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r zephyr/scripts/requirements.txt
+
       - name: Run Twister (ztest)
         working-directory: ${{ env.base_dir }}
         run: ./zephyr/scripts/twister -T tests/autocorrect -p native_posix --inline-logs -v

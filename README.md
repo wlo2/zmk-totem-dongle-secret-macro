@@ -253,17 +253,3 @@ This config provides a custom ZMK behavior to enter bootloader on Nordic SoCs wi
     };
 };
 ```
-
-### Usage
-
-- The keymap binds `&bootloader_nrf` on the `Tri-layer` layer in `config/totem.keymap` to reduce accidental triggers.
-- To enter bootloader, activate the tri-layer then press the bootloader key position.
-
-### Security Considerations
-
-- Trigger is placed behind a layer to reduce accidental or malicious activation. Consider additional gating (combo or long-press) for stricter setups.
-
-### Troubleshooting
-
-- UF2 mode does nothing: Ensure Nordic SoC with UF2 bootloader present; after trigger, the device should enumerate/mount as mass storage.
-- MCUboot mode does nothing: Verify Kconfig flags above and that the DT has `zephyr,boot-mode` pointing to a valid `retention@0`. Ensure MCUboot serial recovery is enabled in the bootloader.
