@@ -6,7 +6,7 @@ WORKDIR /opt/zmk-env
 
 # Initialize west using petejohanson/zmk core/move-to-zephyr-4-1 (Zephyr 4.1 migration)
 # West is preinstalled in the base image
-RUN west init -m https://github.com/petejohanson/zmk --mr core/move-to-zephyr-4-1 . && \
+RUN west init -m https://github.com/petejohanson/zmk --mr core/move-to-zephyr-4-1 --mf app/west.yml . && \
     west update --fetch-opt=--filter=tree:0 && \
     west zephyr-export
 
