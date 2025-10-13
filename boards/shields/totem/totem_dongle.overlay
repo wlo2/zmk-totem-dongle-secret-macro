@@ -7,7 +7,7 @@
 
 &gpregret1 {
     status = "okay";
-    boot_mode0: retention@0 {
+    adafruit_boot_retention: retention@0 {
         compatible = "zephyr,retention";
         status = "okay";
         reg = <0x0 0x1>;
@@ -17,8 +17,15 @@
 / {
     chosen {
         zmk,kscan = &mock_kscan;
-        /* Boot-mode chosen is only used for MCUboot serial-recovery flow; UF2 mode does not require it. */
-        zephyr,boot-mode = &boot_mode0;
+        /* Boot-mode chosen is used for MCUboot serial-recovery; UF2 also uses retention for Adafruit magic. */
+        zephyr,boot-mode = &adafruit_boot_retention;
+        zmk,magic-boot-mode = &adafruit_boot_retention;
+    };
+
+    magic_mapper: bootmode_magic {
+        compatible = "zmk,bootmode-to-magic-mapper";
+        status = "okay";
+        retention = <&adafruit_boot_retention>;
     };
 
     mock_kscan: kscan_1 {

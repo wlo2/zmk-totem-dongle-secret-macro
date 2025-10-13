@@ -1,10 +1,10 @@
 include:
-  - board: seeeduino_xiao_ble
+  - board: xiao_ble
     shield: totem_left
     artifact-name: totem_left
-  - board: seeeduino_xiao_ble
+  - board: xiao_ble
     shield: totem_right
     artifact-name: totem_right
-  - board: seeeduino_xiao_ble
+  - board: xiao_ble
     shield: totem_dongle
     artifact-name: totem_dongle

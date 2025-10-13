@@ -210,61 +210,17 @@ tbd
 # Attributions
 Initially forked from https://github.com/eigatech/zmk-config
 
-## Bootloader Trigger Behavior (`&bootloader_nrf`)
+## Bootloader Support (Zephyr 4.1)
 
-This config provides a custom ZMK behavior to enter bootloader on Nordic SoCs with two selectable modes.
+This configuration now relies on ZMK's native bootloader support available in the Zephyr 4.1 branch. Use the standard `&bootloader` behavior in your keymaps to enter the device bootloader.
 
-### Modes
+- **Behavior**: `&bootloader`
+- **Boards**: Use `xiao_ble` board definition for Seeeduino XIAO BLE and BLE Sense
+- **UF2 requirement**: Entering the UF2 bootloader on XIAO BLE boards requires the Adafruit/TinyUF2 bootloader version 0.9.2 or later. Older Seeed UF2 bootloaders (e.g. 0.6.x) may not support this behavior.
 
-- **UF2 (default)**: Sets both `GPREGRET=0x57` and `GPREGRET2=0x57` directly on Nordic SoCs (SoftDevice-safe APIs when present) and performs a warm reboot. Optional retained memory writes may be performed to explicit `gpregret` nodes when available, but UF2 triggering relies on the registers.
-  - Kconfig: `CONFIG_ZMK_BEHAVIOR_BOOTLOADER_NRF=y`, `CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_UF2=y`.
-  - SoC: Nordic nRF (`CONFIG_SOC_FAMILY_NORDIC_NRF`).
-  - No Zephyr Boot Mode or retention required for UF2.
+Example keymap usage:
 
-- **MCUboot Serial Recovery**: Sets Zephyr Boot Mode to `BOOT_MODE_TYPE_BOOTLOADER` and warm reboots.
-  - Kconfig (enable when using MCUboot):
-    - `CONFIG_ZMK_BEHAVIOR_BOOTLOADER_NRF=y`
-    - `CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_MCUBOOT=y`
-    - `CONFIG_RETENTION=y`
-    - `CONFIG_RETENTION_BOOT_MODE=y`
-    - `CONFIG_RETAINED_MEM=y`
-    - `CONFIG_MCUBOOT_SERIAL=y`
-    - `CONFIG_BOOT_SERIAL_BOOT_MODE=y`
-  - DT requirements (see below): chosen boot-mode with a retention node.
-
-#### Note for Seeeduino XIAO BLE / XIAO BLE Sense UF2 bootloaders
-
-Some Seeed UF2 0.6.x factory bootloaders may ignore GPREGRET and not honor `0x57` for UF2 entry. To verify your bootloader:
-
-1. Manually enter UF2 (double-tap the reset button).
-2. Mount the UF2 mass storage, open `INFO_UF2.TXT`, and check the bootloader lineage/version.
-
-If `GPREGRET=0x57` is not supported, you can:
-
-- Continue using manual UF2 entry (double‑tap reset) when flashing.
-- Update to a TinyUF2/Adafruit bootloader that honors `0x57`.
-- Replace UF2 with MCUboot and enable serial‑recovery:
-  - `CONFIG_MCUBOOT_SERIAL=y`
-  - `CONFIG_BOOT_SERIAL_BOOT_MODE=y`
-
-### DeviceTree Requirements
-
-- Behavior node is provided by `config/bootloader_fix.dtsi` and included in `config/totem.keymap`.
-- For MCUboot path: ensure a retention boot-mode node and chosen is present. The boot-mode chosen below is only used for MCUboot; UF2 mode does not require retention.
-  - Example (present in `boards/shields/totem/totem_*.overlay`):
 ```dts
-&gpregret1 {
-    status = "okay";
-    boot_mode0: retention@0 {
-        compatible = "zephyr,retention";
-        status = "okay";
-        reg = <0x0 0x1>;
-    };
-};
-
-/ {
-    chosen {
-        zephyr,boot-mode = &boot_mode0;
-    };
-};
+// ... inside a bindings list
+&bootloader
 ```

@@ -4,22 +4,6 @@
     col-offset = <5>;
 };
 
-&gpregret1 {
-    status = "okay";
-    boot_mode0: retention@0 {
-        compatible = "zephyr,retention";
-        status = "okay";
-        reg = <0x0 0x1>;
-    };
-};
-
-/ {
-    chosen {
-        /* Boot-mode chosen is only used for MCUboot serial-recovery flow; UF2 mode does not require it. */
-        zephyr,boot-mode = &boot_mode0;
-    };
-};
-
 &kscan0 {
     col-gpios
         = <&xiao_d 8 GPIO_ACTIVE_HIGH>

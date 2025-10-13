@@ -76,7 +76,7 @@ jobs:
           echo "Generating secret macro overlay..."
           
           # Create config directory
-          mkdir -p "${{ env.base_dir }}/config"
+          mkdir -p "${GITHUB_WORKSPACE}/config"
           
           # Check if secret is available
           if [ -z "${{ secrets.STRING_PLACEHOLDER }}" ]; then
@@ -84,15 +84,15 @@ jobs:
             echo "Creating fallback macro that outputs placeholder text"
             
             # Create fallback macro
-            printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "        bindings = <&kp S &kp E &kp C &kp R &kp E &kp T>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "behaviors {\n" > "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "    secret_macro: secret_macro {\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "        compatible = \"zmk,behavior-macro\";\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "        #binding-cells = <0>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "        bindings = <&kp S &kp E &kp C &kp R &kp E &kp T>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "        wait-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "        tap-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "    };\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "};\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
             
             echo "Fallback secret macro created (types 'SECRET')"
           else
@@ -106,34 +106,34 @@ jobs:
             fi
             
             # Create the actual secret macro
-            printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            echo "        bindings = <$SECRET_CONTENT>;" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-            printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+            printf "behaviors {\n" > "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "    secret_macro: secret_macro {\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "        compatible = \"zmk,behavior-macro\";\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "        #binding-cells = <0>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            echo "        bindings = <$SECRET_CONTENT>;" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "        wait-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "        tap-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "    };\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            printf "};\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
             
             echo "Custom secret macro created successfully"
           fi
           
           # Verify the generated file
-          if [ -f "${{ env.base_dir }}/config/secret_macro.overlay" ]; then
+          if [ -f "${GITHUB_WORKSPACE}/config/secret_macro.overlay" ]; then
             echo "Generated overlay file:"
-            cat "${{ env.base_dir }}/config/secret_macro.overlay"
+            cat "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
             
             # Basic syntax validation
-            if grep -q "behaviors {" "${{ env.base_dir }}/config/secret_macro.overlay" && \
-               grep -q "secret_macro:" "${{ env.base_dir }}/config/secret_macro.overlay" && \
-               grep -q "bindings = <" "${{ env.base_dir }}/config/secret_macro.overlay"; then
+            if grep -q "behaviors {" "${GITHUB_WORKSPACE}/config/secret_macro.overlay" && \
+               grep -q "secret_macro:" "${GITHUB_WORKSPACE}/config/secret_macro.overlay" && \
+               grep -q "bindings = <" "${GITHUB_WORKSPACE}/config/secret_macro.overlay"; then
               echo "Overlay file structure validation passed"
             
             # Check if bootloader_fix.overlay exists and show its content
-            if [ -f "${{ env.base_dir }}/config/bootloader_fix.overlay" ]; then
+            if [ -f "${GITHUB_WORKSPACE}/config/bootloader_fix.overlay" ]; then
               echo "Bootloader fix overlay found:"
-              cat "${{ env.base_dir }}/config/bootloader_fix.overlay"
+              cat "${GITHUB_WORKSPACE}/config/bootloader_fix.overlay"
             else
               echo "Bootloader fix overlay not found"
             fi
