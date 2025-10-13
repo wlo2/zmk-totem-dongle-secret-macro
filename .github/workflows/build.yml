@@ -28,7 +28,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository_owner }}/zmk-zephyr:4.1.0
+      image: ghcr.io/${{ github.repository_owner }}/zmk-zephyr:core-move-to-zephyr-4-1
     needs: matrix
     name: Build
     strategy:

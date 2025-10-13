@@ -1,4 +1,4 @@
-name: Build Settings Reset
+name: Build and Push Prebaked image and Settings Reset
 
 on:
   workflow_dispatch:
@@ -18,23 +18,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/zmk-zephyr
           tags: |
-            type=raw,value=4.1.0
+            type=raw,value=core-move-to-zephyr-4-1
             type=raw,value=latest
-
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -44,7 +41,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-    build:
+  build:
     needs: build-image
     container:
       image: ghcr.io/${{ github.repository_owner }}/zmk-zephyr:core-move-to-zephyr-4-1
@@ -85,10 +82,10 @@ jobs:
           echo "**Reason:** ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Usage Instructions:**" >> $GITHUB_STEP_SUMMARY
-          echo "1. Download the \`settings_reset.uf2\` artifact" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the `settings_reset.uf2` artifact" >> $GITHUB_STEP_SUMMARY
           echo "2. Put your keyboard into bootloader mode" >> $GITHUB_STEP_SUMMARY
           echo "3. Flash the settings reset firmware" >> $GITHUB_STEP_SUMMARY
           echo "4. Power cycle the keyboard" >> $GITHUB_STEP_SUMMARY
           echo "5. Flash your normal firmware back" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️  **Warning:** This will erase all saved settings, bonds, and macros!"
+          echo "  **Warning:** This will erase all saved settings, bonds, and macros!"
