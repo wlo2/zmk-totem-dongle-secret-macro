@@ -4,12 +4,9 @@ FROM zmkfirmware/zmk-build-arm:stable
 ENV ZEPHYR_TOOLCHAIN_VARIANT=zephyr
 WORKDIR /opt/zmk-env
 
-# Seed west manifest (use your module's manifest if needed; empty config dir is fine for Zephyr upstream)
-RUN mkdir -p /opt/zmk-env/config
-
-# Initialize and fetch Zephyr + modules per zmk's manifest
+# Initialize west using ZMK beta branch (Zephyr 4.1 migration)
 # West is preinstalled in the base image
-RUN west init -l /opt/zmk-env/config && \
+RUN west init -m https://github.com/zmkfirmware/zmk --mr move-to-zephyr-4-1 . && \
     west update --fetch-opt=--filter=tree:0 && \
     west zephyr-export
 
