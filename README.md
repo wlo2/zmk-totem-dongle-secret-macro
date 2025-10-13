@@ -209,3 +209,61 @@ tbd
 
 # Attributions
 Initially forked from https://github.com/eigatech/zmk-config
+
+## Bootloader Trigger Behavior (`&bootloader_nrf`)
+
+This config provides a custom ZMK behavior to enter bootloader on Nordic SoCs with two selectable modes.
+
+### Modes
+
+- **UF2 (default)**: Writes `GPREGRET=0x57` and performs a warm reboot.
+  - Kconfig: `CONFIG_ZMK_BEHAVIOR_BOOTLOADER_NRF=y`, `CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_UF2=y`.
+  - SoC: Nordic nRF (`CONFIG_SOC_FAMILY_NORDIC_NRF`).
+  - No Zephyr Boot Mode or retention required.
+
+- **MCUboot Serial Recovery**: Sets Zephyr Boot Mode to `BOOT_MODE_TYPE_BOOTLOADER` and warm reboots.
+  - Kconfig (enable when using MCUboot):
+    - `CONFIG_ZMK_BEHAVIOR_BOOTLOADER_NRF=y`
+    - `CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_MCUBOOT=y`
+    - `CONFIG_RETENTION=y`
+    - `CONFIG_RETENTION_BOOT_MODE=y`
+    - `CONFIG_RETAINED_MEM=y`
+    - `CONFIG_MCUBOOT_SERIAL=y`
+    - `CONFIG_BOOT_SERIAL_BOOT_MODE=y`
+  - DT requirements (see below): chosen boot-mode with a retention node.
+
+### DeviceTree Requirements
+
+- Behavior node is provided by `config/bootloader_fix.dtsi` and included in `config/totem.keymap`.
+- For MCUboot path: ensure a retention boot-mode node and chosen is present.
+  - Example (present in `boards/shields/totem/totem_*.overlay`):
+```dts
+&gpregret1 {
+    status = "okay";
+    boot_mode0: retention@0 {
+        compatible = "zephyr,retention";
+        status = "okay";
+        reg = <0x0 0x1>;
+    };
+};
+
+/ {
+    chosen {
+        zephyr,boot-mode = &boot_mode0;
+    };
+};
+```
+
+### Usage
+
+- The keymap binds `&bootloader_nrf` on the `Tri-layer` layer in `config/totem.keymap` to reduce accidental triggers.
+- To enter bootloader, activate the tri-layer then press the bootloader key position.
+
+### Security Considerations
+
+- Trigger is placed behind a layer to reduce accidental or malicious activation. Consider additional gating (combo or long-press) for stricter setups.
+
+### Troubleshooting
+
+- UF2 mode does nothing: Ensure Nordic SoC with UF2 bootloader present; after trigger, the device should enumerate/mount as mass storage.
+- MCUboot mode does nothing: Verify Kconfig flags above and that the DT has `zephyr,boot-mode` pointing to a valid `retention@0`. Ensure MCUboot serial recovery is enabled in the bootloader.

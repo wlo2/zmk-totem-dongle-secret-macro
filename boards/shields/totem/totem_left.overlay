@@ -1,1 +1,16 @@
 #include "totem.dtsi"
+
+&gpregret1 {
+    status = "okay";
+    boot_mode0: retention@0 {
+        compatible = "zephyr,retention";
+        status = "okay";
+        reg = <0x0 0x1>;
+    };
+};
+
+/ {
+    chosen {
+        zephyr,boot-mode = &boot_mode0;
+    };
+};

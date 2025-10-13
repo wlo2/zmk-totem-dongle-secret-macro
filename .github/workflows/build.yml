@@ -89,6 +89,11 @@ jobs:
             if [ -d "zephyr" ]; then
               cp -R zephyr "${{ env.base_dir }}/"
             fi
+
+            # Copy tests so Twister can discover them in the isolated dir
+            if [ -d "tests" ]; then
+              cp -R tests "${{ env.base_dir }}/"
+            fi
             
             echo "ZMK module files copied to isolated directory"
             ls -la "${{ env.base_dir }}"
@@ -210,6 +215,10 @@ jobs:
       - name: West Zephyr export
         working-directory: ${{ env.base_dir }}
         run: west zephyr-export
+
+      - name: Run Twister (ztest)
+        working-directory: ${{ env.base_dir }}
+        run: ./zephyr/scripts/twister -T tests/autocorrect -p native_posix --inline-logs -v
 
       - name: West Build (${{ env.display_name }})
         working-directory: ${{ env.base_dir }}

@@ -1,0 +1,31 @@
+# ZMK module Kconfig for custom bootloader behavior
+
+menu "ZMK Totem Dongle Module Options"
+
+config ZMK_BEHAVIOR_BOOTLOADER_NRF
+    bool "Enable nRF bootloader behavior"
+    depends on ZMK
+    default n
+    help
+      Enable the custom behavior `&bootloader_nrf` to enter bootloader.
+
+choice BEHAVIOR_BOOTLOADER_NRF_MODE
+    prompt "Bootloader trigger mode"
+    depends on ZMK_BEHAVIOR_BOOTLOADER_NRF
+    default BEHAVIOR_BOOTLOADER_NRF_MODE_UF2
+
+config BEHAVIOR_BOOTLOADER_NRF_MODE_UF2
+    bool "UF2 GPREGRET (0x57)"
+    help
+      Write GPREGRET=0x57 (Adafruit UF2) then warm reboot.
+
+config BEHAVIOR_BOOTLOADER_NRF_MODE_MCUBOOT
+    bool "MCUboot Serial Recovery (Boot Mode API)"
+    help
+      Set Zephyr boot mode to BOOT_MODE_TYPE_BOOTLOADER then warm reboot.
+      Requires retention boot-mode DT and Kconfig (RETENTION, RETAINED_MEM,
+      RETENTION_BOOT_MODE) and MCUboot serial (MCUBOOT_SERIAL, BOOT_SERIAL_BOOT_MODE).
+
+endchoice
+
+endmenu

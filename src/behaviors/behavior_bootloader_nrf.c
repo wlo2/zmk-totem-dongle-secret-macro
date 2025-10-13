@@ -9,9 +9,13 @@
 #include <zephyr/device.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/retention/bootmode.h>
 #include <zephyr/sys/reboot.h>
 #include <zmk/behavior.h>
+#include <zephyr/retention/bootmode.h>
+
+#if defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
+#include <hal/nrf_power.h>
+#endif
 
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 
@@ -21,19 +25,34 @@ static int bootloader_nrf_init(const struct device *dev) { return 0; }
 
 static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
                                    struct zmk_behavior_binding_event event) {
-    LOG_INF("nRF bootloader behavior triggered via Boot Mode API");
-    
-    /* Adafruit UF2 bootloader magic value for direct entry */
-    int ret = bootmode_set(0x57);
-    if (ret < 0) {
-        LOG_ERR("Failed to set boot mode (0x57): %d", ret);
-    }
+    ARG_UNUSED(binding);
+    ARG_UNUSED(event);
 
-    LOG_INF("Boot mode set to 0x57, rebooting...");
-    
+#if defined(CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_UF2)
+    LOG_INF("Bootloader (UF2) trigger: writing GPREGRET=0x57 and rebooting");
+
+#if defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
+    NRF_POWER->GPREGRET = 0x57;
+#else
+    LOG_WRN("UF2 GPREGRET write requested on non-Nordic SoC; skipping write");
+#endif
+
     sys_reboot(SYS_REBOOT_WARM);
-    
     return ZMK_BEHAVIOR_OPAQUE;
+
+#elif defined(CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_MCUBOOT)
+    LOG_INF("Bootloader (MCUboot) trigger via Boot Mode API");
+    int ret = bootmode_set(BOOT_MODE_TYPE_BOOTLOADER);
+    if (ret < 0) {
+        LOG_ERR("Failed to set MCUboot boot mode: %d", ret);
+    }
+    sys_reboot(SYS_REBOOT_WARM);
+    return ZMK_BEHAVIOR_OPAQUE;
+
+#else
+    LOG_ERR("No bootloader mode selected. Enable UF2 or MCUboot mode in Kconfig.");
+    return ZMK_BEHAVIOR_OPAQUE;
+#endif
 }
 
 static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
