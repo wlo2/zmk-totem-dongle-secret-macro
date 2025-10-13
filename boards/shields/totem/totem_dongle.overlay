@@ -25,7 +25,6 @@
     magic_mapper: bootmode_magic {
         compatible = "zmk,bootmode-to-magic-mapper";
         status = "okay";
-        retention = <&adafruit_boot_retention>;
     };
 
     mock_kscan: kscan_1 {
