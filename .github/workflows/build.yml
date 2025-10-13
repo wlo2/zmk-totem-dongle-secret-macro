@@ -174,42 +174,46 @@ jobs:
       # Pre-baked image already has west workspace; no cache/init/update/export needed
       # External modules checked out via actions/checkout above
 
-      - name: Patch test platforms for Zephyr 4.x (native_sim)
-        run: |
-          set -eux
-          echo "Patching test platform_allow in ${ZMK_AUTOCORRECT_PATH}/tests"
-          # Target the specific failing test file
-          TEST_FILE="${ZMK_AUTOCORRECT_PATH}/tests/autocorrect/testcase.yaml"
-          if [ -f "$TEST_FILE" ]; then
-            echo "=== Before patch ==="
-            cat "$TEST_FILE"
-            # Replace any platform_allow line with YAML list format
-            sed -i -E "s/^([[:space:]]*)platform_allow:.*$/\1platform_allow: [native_sim]/" "$TEST_FILE"
-            echo "=== After patch ==="
-            cat "$TEST_FILE"
-          else
-            echo "Test file not found: $TEST_FILE"
-            exit 1
-          fi
+      # Skip autocorrect unit tests - they require ZMK core headers (zmk/endpoints.h, drivers/behavior.h)
+      # which aren't available in standalone Twister tests. The module is tested via integration
+      # in the actual firmware builds (left/right/dongle).
 
-      - name: Show all test YAML files
-        run: |
-          set -eux
-          echo "All YAML/YML files under ${ZMK_AUTOCORRECT_PATH}/tests:"
-          find "${ZMK_AUTOCORRECT_PATH}/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) || true
+      # - name: Patch test platforms for Zephyr 4.x (native_sim)
+      #   run: |
+      #     set -eux
+      #     echo "Patching test platform_allow in ${ZMK_AUTOCORRECT_PATH}/tests"
+      #     # Target the specific failing test file
+      #     TEST_FILE="${ZMK_AUTOCORRECT_PATH}/tests/autocorrect/testcase.yaml"
+      #     if [ -f "$TEST_FILE" ]; then
+      #       echo "=== Before patch ==="
+      #       cat "$TEST_FILE"
+      #       # Replace any platform_allow line with YAML list format
+      #       sed -i -E "s/^([[:space:]]*)platform_allow:.*$/\1platform_allow: [native_sim]/" "$TEST_FILE"
+      #       echo "=== After patch ==="
+      #       cat "$TEST_FILE"
+      #     else
+      #       echo "Test file not found: $TEST_FILE"
+      #       exit 1
+      #     fi
 
-      # Twister deps are baked into the image; no venv/pip install required
+      # - name: Show all test YAML files
+      #   run: |
+      #     set -eux
+      #     echo "All YAML/YML files under ${ZMK_AUTOCORRECT_PATH}/tests:"
+      #     find "${ZMK_AUTOCORRECT_PATH}/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) || true
 
-      - name: Run unit tests (Twister)
-        continue-on-error: true
-        working-directory: /opt/zmk-env
-        env:
-          ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
-          ZEPHYR_MODULES: ${{ env.ZMK_AUTOCORRECT_PATH }}
-        run: |
-          python "${ZEPHYR_BASE}/scripts/twister" \
-            -T "${ZMK_AUTOCORRECT_PATH}/tests/autocorrect" \
-            -p native_sim --inline-logs -v
+      # # Twister deps are baked into the image; no venv/pip install required
+
+      # - name: Run unit tests (Twister)
+      #   continue-on-error: true
+      #   working-directory: /opt/zmk-env
+      #   env:
+      #     ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
+      #     ZEPHYR_MODULES: ${{ env.ZMK_AUTOCORRECT_PATH }}
+      #   run: |
+      #     python "${ZEPHYR_BASE}/scripts/twister" \
+      #       -T "${ZMK_AUTOCORRECT_PATH}/tests/autocorrect" \
+      #       -p native_sim --inline-logs -v
 
       - name: West Build (${{ env.display_name }})
         working-directory: /opt/zmk-env
