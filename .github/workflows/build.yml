@@ -42,6 +42,20 @@ jobs:
         run: |
           echo "build_dir=$(mktemp -d)" >> $GITHUB_ENV
 
+      - name: Checkout zmk_autocorrect module
+        uses: actions/checkout@v4
+        with:
+          repository: wlo2/zmk_autocorrect
+          ref: main
+          path: zmk_autocorrect
+
+      - name: Checkout zmk-antecedent-morph module
+        uses: actions/checkout@v4
+        with:
+          repository: ssbb/zmk-antecedent-morph
+          ref: v1
+          path: zmk-antecedent-morph
+
       - name: Prepare variables
         shell: sh -x {0}
         env:
@@ -53,26 +67,11 @@ jobs:
           # Use pre-baked west workspace inside the container image
           echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
           echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
-          # Point west to this repo's manifest (config/west.yml) to fetch external modules into base_dir
-          west config manifest.path "${GITHUB_WORKSPACE}/config"
-          west update --fetch-opt=--filter=tree:0
-          # Debug: show west projects
-          echo "=== West projects ==="
-          west list || true
-          # Discover module paths from west; Zephyr will auto-register them as modules.
-          ZMK_AUTOCORRECT_PATH=$(west list -f "{path}" zmk_autocorrect)
-          ANTE_MORPH_PATH=$(west list -f "{path}" zmk-antecedent-morph || true)
-          echo "ZMK_AUTOCORRECT_PATH detected: ${ZMK_AUTOCORRECT_PATH}"
-          echo "ANTE_MORPH_PATH detected: ${ANTE_MORPH_PATH}"
-          echo "ZMK_AUTOCORRECT_PATH=${ZMK_AUTOCORRECT_PATH}" >> $GITHUB_ENV
-          echo "ANTE_MORPH_PATH=${ANTE_MORPH_PATH}" >> $GITHUB_ENV
-          # Build ZMK_EXTRA_MODULES list with non-empty paths
-          EXTRA_MODULES="${GITHUB_WORKSPACE}"
-          if [ -n "${ZMK_AUTOCORRECT_PATH}" ]; then
-            EXTRA_MODULES="${EXTRA_MODULES};${ZMK_AUTOCORRECT_PATH}"
-          fi
-          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${EXTRA_MODULES}'"
-          echo "ZMK_EXTRA_MODULES will be: ${EXTRA_MODULES}"
+          # External modules checked out to GITHUB_WORKSPACE
+          echo "ZMK_AUTOCORRECT_PATH=${GITHUB_WORKSPACE}/zmk_autocorrect" >> $GITHUB_ENV
+          echo "ANTE_MORPH_PATH=${GITHUB_WORKSPACE}/zmk-antecedent-morph" >> $GITHUB_ENV
+          # Build ZMK_EXTRA_MODULES list
+          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk_autocorrect;${GITHUB_WORKSPACE}/zmk-antecedent-morph'"
 
           if [ -n "${snippet}" ]; then
             extra_west_args="-S \"${snippet}\""
@@ -173,8 +172,7 @@ jobs:
           STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
 
       # Pre-baked image already has west workspace; no cache/init/update/export needed
-
-      # External modules are fetched by west using config/west.yml above
+      # External modules checked out via actions/checkout above
 
       - name: Patch test platforms for Zephyr 4.x (native_sim)
         run: |
