@@ -56,13 +56,23 @@ jobs:
           # Point west to this repo's manifest (config/west.yml) to fetch external modules into base_dir
           west config manifest.path "${GITHUB_WORKSPACE}/config"
           west update --fetch-opt=--filter=tree:0
+          # Debug: show west projects
+          echo "=== West projects ==="
+          west list || true
           # Discover module paths from west; Zephyr will auto-register them as modules.
           ZMK_AUTOCORRECT_PATH=$(west list -f "{path}" zmk_autocorrect)
           ANTE_MORPH_PATH=$(west list -f "{path}" zmk-antecedent-morph || true)
+          echo "ZMK_AUTOCORRECT_PATH detected: ${ZMK_AUTOCORRECT_PATH}"
+          echo "ANTE_MORPH_PATH detected: ${ANTE_MORPH_PATH}"
           echo "ZMK_AUTOCORRECT_PATH=${ZMK_AUTOCORRECT_PATH}" >> $GITHUB_ENV
           echo "ANTE_MORPH_PATH=${ANTE_MORPH_PATH}" >> $GITHUB_ENV
-          # Include this repo and zmk_autocorrect in ZMK_EXTRA_MODULES so DT includes under module app/ resolve.
-          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${ZMK_AUTOCORRECT_PATH}'"
+          # Build ZMK_EXTRA_MODULES list with non-empty paths
+          EXTRA_MODULES="${GITHUB_WORKSPACE}"
+          if [ -n "${ZMK_AUTOCORRECT_PATH}" ]; then
+            EXTRA_MODULES="${EXTRA_MODULES};${ZMK_AUTOCORRECT_PATH}"
+          fi
+          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${EXTRA_MODULES}'"
+          echo "ZMK_EXTRA_MODULES will be: ${EXTRA_MODULES}"
 
           if [ -n "${snippet}" ]; then
             extra_west_args="-S \"${snippet}\""
