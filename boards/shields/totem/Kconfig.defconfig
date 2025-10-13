@@ -12,8 +12,6 @@ config ZMK_BLE
 config ZMK_BEHAVIOR_BOOTLOADER_NRF
     default y
 
-config BEHAVIOR_BOOTLOADER_NRF_MODE_UF2
-    default y
 
 endif
 
