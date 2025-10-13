@@ -158,6 +158,14 @@ jobs:
           repository: wlo2/zmk_autocorrect
           path: zmk_autocorrect
 
+      - name: Patch test platforms for Zephyr 4.x (native_sim)
+        run: |
+          set -eux
+          find "${GITHUB_WORKSPACE}/zmk_autocorrect/tests" -name 'testcase.yaml' -print0 | while IFS= read -r -d '' f; do
+            # Normalize any platform_allow to a YAML list using native_sim
+            sed -i -E "s/^([[:space:]]*)platform_allow:.*$/\1platform_allow: [native_sim]/" "$f"
+          done
+
       # Twister deps are baked into the image; no venv/pip install required
 
       - name: Run unit tests (Twister)
@@ -174,8 +182,8 @@ jobs:
         working-directory: /opt/zmk-env
         shell: sh -x {0}
         env:
-          ZEPHYR_BASE: zephyr
-        run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
+          ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
+        run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/cmake ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
 
       - name: ${{ env.display_name }} Kconfig file
         run: |
