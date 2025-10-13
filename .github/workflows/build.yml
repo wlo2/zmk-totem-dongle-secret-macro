@@ -51,7 +51,7 @@ jobs:
           snippet: ${{ matrix.snippet }}
         run: |
           # Use pre-baked west workspace inside the container image
-          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
+          export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk_autocorrect'"
           echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
           echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
 
