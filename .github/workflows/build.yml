@@ -216,15 +216,17 @@ jobs:
         working-directory: ${{ env.base_dir }}
         run: west zephyr-export
 
-      - name: Install Python and pip inside container
+      - name: Ensure Python venv support
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends python3 python3-pip python3-venv ca-certificates
+          apt-get install -y --no-install-recommends python3-venv ca-certificates
 
-      - name: Install Zephyr Twister deps
+      - name: Create Python venv
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -r zephyr/scripts/requirements.txt
+          python3 -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r zephyr/scripts/requirements.txt
 
       - name: Run Twister (ztest)
         continue-on-error: true
