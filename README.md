@@ -216,10 +216,10 @@ This config provides a custom ZMK behavior to enter bootloader on Nordic SoCs wi
 
 ### Modes
 
-- **UF2 (default)**: Writes `GPREGRET=0x57` (via Zephyr retained_mem when available, with Nordic GPREGRET register fallback) and performs a cold reboot.
+- **UF2 (default)**: Sets both `GPREGRET=0x57` and `GPREGRET2=0x57` directly on Nordic SoCs (SoftDevice-safe APIs when present) and performs a warm reboot. Optional retained memory writes may be performed to explicit `gpregret` nodes when available, but UF2 triggering relies on the registers.
   - Kconfig: `CONFIG_ZMK_BEHAVIOR_BOOTLOADER_NRF=y`, `CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_UF2=y`.
   - SoC: Nordic nRF (`CONFIG_SOC_FAMILY_NORDIC_NRF`).
-  - No Zephyr Boot Mode or retention required.
+  - No Zephyr Boot Mode or retention required for UF2.
 
 - **MCUboot Serial Recovery**: Sets Zephyr Boot Mode to `BOOT_MODE_TYPE_BOOTLOADER` and warm reboots.
   - Kconfig (enable when using MCUboot):
@@ -234,21 +234,23 @@ This config provides a custom ZMK behavior to enter bootloader on Nordic SoCs wi
 
 #### Note for Seeeduino XIAO BLE / XIAO BLE Sense UF2 bootloaders
 
-Some factory UF2 bootloaders on these boards do not honor `GPREGRET=0x57` for UF2 entry. To verify support:
+Some Seeed UF2 0.6.x factory bootloaders may ignore GPREGRET and not honor `0x57` for UF2 entry. To verify your bootloader:
 
 1. Manually enter UF2 (double-tap the reset button).
 2. Mount the UF2 mass storage, open `INFO_UF2.TXT`, and check the bootloader lineage/version.
 
 If `GPREGRET=0x57` is not supported, you can:
 
-- Use manual UF2 entry (double-tap reset) when flashing.
-- Reflash an Adafruit-compatible UF2 bootloader that honors `GPREGRET`.
-- Switch to an MCUboot serial-recovery flow instead of UF2.
+- Continue using manual UF2 entry (double‑tap reset) when flashing.
+- Update to a TinyUF2/Adafruit bootloader that honors `0x57`.
+- Replace UF2 with MCUboot and enable serial‑recovery:
+  - `CONFIG_MCUBOOT_SERIAL=y`
+  - `CONFIG_BOOT_SERIAL_BOOT_MODE=y`
 
 ### DeviceTree Requirements
 
 - Behavior node is provided by `config/bootloader_fix.dtsi` and included in `config/totem.keymap`.
-- For MCUboot path: ensure a retention boot-mode node and chosen is present. The boot-mode chosen below is only used for MCUboot; UF2 mode does not require it.
+- For MCUboot path: ensure a retention boot-mode node and chosen is present. The boot-mode chosen below is only used for MCUboot; UF2 mode does not require retention.
   - Example (present in `boards/shields/totem/totem_*.overlay`):
 ```dts
 &gpregret1 {

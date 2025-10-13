@@ -18,11 +18,21 @@
 #include <hal/nrf_power.h>
 #endif
 
+#if defined(SOFTDEVICE_PRESENT)
+#include <nrf_soc.h>
+#endif
+
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-static int bootloader_nrf_init(const struct device *dev) { return 0; }
+static int bootloader_nrf_init(const struct device *dev) {
+#if defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
+    /* Diagnostic: capture reset reason at startup to verify warm reset path */
+    LOG_INF("RESETREAS: 0x%08x", (unsigned int)NRF_POWER->RESETREAS);
+#endif
+    return 0;
+}
 
 static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
                                    struct zmk_behavior_binding_event event) {
@@ -30,32 +40,52 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     ARG_UNUSED(event);
 
 #if defined(CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_UF2)
-    LOG_INF("Bootloader (UF2) trigger: writing GPREGRET=0x57 and rebooting (cold)");
+    LOG_INF("Bootloader (UF2) trigger: setting GPREGRET/GPREGRET2=0x57 and warm reboot");
 
-    /* Prefer Zephyr retained_mem API if available */
-    const struct device *gp = DEVICE_DT_GET_ONE(nordic_nrf_gpregret);
-    if (device_is_ready(gp)) {
-        uint8_t val = 0x57;
-        int wret = retained_mem_write(gp, 0, &val, 1);
-        if (wret < 0) {
-            LOG_ERR("retained_mem_write failed: %d", wret);
+    /* Optional: write via explicit retained_mem nodes if available (gpregret index 0 only) */
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(gpregret), okay)
+    {
+        const struct device *gp0 = DEVICE_DT_GET(DT_NODELABEL(gpregret));
+        if (device_is_ready(gp0)) {
+            uint8_t val = 0x57;
+            int w0 = retained_mem_write(gp0, 0, &val, 1);
+            if (w0 < 0) {
+                LOG_ERR("retained_mem_write gpregret failed: %d", w0);
+            }
         }
-    } else {
-        LOG_WRN("retained_mem device not ready; falling back to direct GPREGRET write (Nordic only)");
-
-#if defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
-        NRF_POWER->GPREGRET = 0x57;
-#else
-        LOG_WRN("UF2 GPREGRET write requested on non-Nordic SoC; skipping write");
-#endif
     }
-
-#if defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
-    LOG_INF("GPREGRET now: 0x%02x", (int)NRF_POWER->GPREGRET);
 #endif
-    LOG_INF("Locality: CENTRAL");
-    sys_reboot(SYS_REBOOT_COLD);
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(gpregret1), okay)
+    {
+        const struct device *gp1 = DEVICE_DT_GET(DT_NODELABEL(gpregret1));
+        if (device_is_ready(gp1)) {
+            uint8_t val = 0x57;
+            int w1 = retained_mem_write(gp1, 0, &val, 1);
+            if (w1 < 0) {
+                LOG_ERR("retained_mem_write gpregret1 failed: %d", w1);
+            }
+        }
+    }
+#endif
+
+    /* Always ensure both GPREGRET registers are set for UF2, regardless of retained_mem availability */
+#if defined(SOFTDEVICE_PRESENT)
+    (void)sd_power_gpregret_set(0, 0x57);
+    (void)sd_power_gpregret_set(1, 0x57);
+    LOG_INF("GPREGRET: 0x%02x GPREGRET2: 0x%02x", (int)NRF_POWER->GPREGRET, (int)NRF_POWER->GPREGRET2);
+    sd_nvic_SystemReset();
     return ZMK_BEHAVIOR_OPAQUE;
+#elif defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
+    NRF_POWER->GPREGRET = 0x57;
+    NRF_POWER->GPREGRET2 = 0x57;
+    LOG_INF("GPREGRET: 0x%02x GPREGRET2: 0x%02x", (int)NRF_POWER->GPREGRET, (int)NRF_POWER->GPREGRET2);
+    sys_reboot(SYS_REBOOT_WARM);
+    return ZMK_BEHAVIOR_OPAQUE;
+#else
+    LOG_WRN("UF2 GPREGRET write requested on non-Nordic SoC; skipping write");
+    sys_reboot(SYS_REBOOT_WARM);
+    return ZMK_BEHAVIOR_OPAQUE;
+#endif
 
 #elif defined(CONFIG_BEHAVIOR_BOOTLOADER_NRF_MODE_MCUBOOT)
     LOG_INF("Bootloader (MCUboot) trigger via Boot Mode API");
