@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       reason:
-        description: 'Reason for building settings reset firmware'
+        description: 'Build and Push Prebaked image and Settings Reset'
         required: false
         default: 'Manual settings reset needed'
 

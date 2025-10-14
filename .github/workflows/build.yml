@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       include_settings_reset:
-        description: 'Build settings reset firmware'
+        description: 'Build firmware using pre-baked image'
         required: false
         default: false
         type: boolean
@@ -38,10 +38,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create build directory
-        run: |
-          echo "build_dir=$(mktemp -d)" >> $GITHUB_ENV
-
+      # Always checkout external modules (no cache since you update them frequently)
       - name: Checkout zmk_autocorrect module
         uses: actions/checkout@v4
         with:
@@ -56,6 +53,11 @@ jobs:
           ref: v1
           path: zmk-antecedent-morph
 
+      # Use fixed build directory for caching
+      - name: Create build directory
+        run: |
+          echo "build_dir=${GITHUB_WORKSPACE}/build-${{ matrix.board }}-${{ matrix.shield }}" >> $GITHUB_ENV
+
       - name: Prepare variables
         shell: sh -x {0}
         env:
@@ -67,10 +69,8 @@ jobs:
           # Use pre-baked west workspace inside the container image
           echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
           echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
-          # External modules checked out to GITHUB_WORKSPACE
           echo "ZMK_AUTOCORRECT_PATH=${GITHUB_WORKSPACE}/zmk_autocorrect" >> $GITHUB_ENV
           echo "ANTE_MORPH_PATH=${GITHUB_WORKSPACE}/zmk-antecedent-morph" >> $GITHUB_ENV
-          # Build ZMK_EXTRA_MODULES list
           export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk_autocorrect;${GITHUB_WORKSPACE}/zmk-antecedent-morph'"
 
           if [ -n "${snippet}" ]; then
@@ -171,49 +171,20 @@ jobs:
         env:
           STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
 
-      # Pre-baked image already has west workspace; no cache/init/update/export needed
-      # External modules checked out via actions/checkout above
-
-      # Skip autocorrect unit tests - they require ZMK core headers (zmk/endpoints.h, drivers/behavior.h)
-      # which aren't available in standalone Twister tests. The module is tested via integration
-      # in the actual firmware builds (left/right/dongle).
-
-      # - name: Patch test platforms for Zephyr 4.x (native_sim)
-      #   run: |
-      #     set -eux
-      #     echo "Patching test platform_allow in ${ZMK_AUTOCORRECT_PATH}/tests"
-      #     # Target the specific failing test file
-      #     TEST_FILE="${ZMK_AUTOCORRECT_PATH}/tests/autocorrect/testcase.yaml"
-      #     if [ -f "$TEST_FILE" ]; then
-      #       echo "=== Before patch ==="
-      #       cat "$TEST_FILE"
-      #       # Replace any platform_allow line with YAML list format
-      #       sed -i -E "s/^([[:space:]]*)platform_allow:.*$/\1platform_allow: [native_sim]/" "$TEST_FILE"
-      #       echo "=== After patch ==="
-      #       cat "$TEST_FILE"
-      #     else
-      #       echo "Test file not found: $TEST_FILE"
-      #       exit 1
-      #     fi
-
-      # - name: Show all test YAML files
-      #   run: |
-      #     set -eux
-      #     echo "All YAML/YML files under ${ZMK_AUTOCORRECT_PATH}/tests:"
-      #     find "${ZMK_AUTOCORRECT_PATH}/tests" -type f \( -name '*.yaml' -o -name '*.yml' \) || true
-
-      # # Twister deps are baked into the image; no venv/pip install required
-
-      # - name: Run unit tests (Twister)
-      #   continue-on-error: true
-      #   working-directory: /opt/zmk-env
-      #   env:
-      #     ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
-      #     ZEPHYR_MODULES: ${{ env.ZMK_AUTOCORRECT_PATH }}
-      #   run: |
-      #     python "${ZEPHYR_BASE}/scripts/twister" \
-      #       -T "${ZMK_AUTOCORRECT_PATH}/tests/autocorrect" \
-      #       -p native_sim --inline-logs -v
+      # Note: GitHub Actions caches have a fixed 7-day retention for unused caches.
+      # This cannot be changed. Caches are kept alive by accessing them regularly.
+      # If you need longer retention, consider using artifacts instead (configurable up to 90 days).
+      
+      # Cache build artifacts - keymap changes invalidate, module changes don't
+      # (since you update modules frequently and want fresh builds with them)
+      - name: Cache West build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/build-${{ matrix.board }}-${{ matrix.shield }}
+          key: west-build-${{ matrix.board }}-${{ matrix.shield }}-${{ hashFiles('config/*.conf', 'config/*.keymap', 'config/*.dtsi') }}-v1
+          restore-keys: |
+            west-build-${{ matrix.board }}-${{ matrix.shield }}-
 
       - name: West Build (${{ env.display_name }})
         working-directory: /opt/zmk-env
