@@ -101,6 +101,9 @@ jobs:
           # Create config directory
           mkdir -p "${GITHUB_WORKSPACE}/config"
           
+          # Make the converter script executable
+          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh"
+          
           # Check if secret is available
           if [ -z "${{ secrets.STRING_PLACEHOLDER }}" ]; then
             echo "Warning: STRING_PLACEHOLDER secret not set or empty"
@@ -119,21 +122,32 @@ jobs:
             
             echo "Fallback secret macro created (types 'SECRET')"
           else
-            echo "STRING_PLACEHOLDER secret found, creating custom macro"
+            echo "STRING_PLACEHOLDER secret found, converting string to bindings"
             
-            # Validate secret content format
-            SECRET_CONTENT="${{ secrets.STRING_PLACEHOLDER }}"
-            if ! echo "$SECRET_CONTENT" | grep -q '^&'; then
-              echo "Warning: Secret content doesn't start with '&' - this may not be valid ZMK binding format"
-              echo "Expected format: '&kp H &kp E &kp L &kp L &kp O' or similar"
+            SECRET_STRING="${{ secrets.STRING_PLACEHOLDER }}"
+            
+            # Check if the secret is already in binding format (starts with &)
+            if echo "$SECRET_STRING" | grep -q '^&'; then
+              echo "Secret appears to be in binding format already, using as-is"
+              BINDINGS="$SECRET_STRING"
+            else
+              echo "Converting string to ZMK bindings using external script..."
+              BINDINGS=$("${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh" "$SECRET_STRING")
+              
+              if [ $? -ne 0 ] || [ -z "$BINDINGS" ]; then
+                echo "Error: Failed to convert string to bindings"
+                exit 1
+              fi
             fi
             
-            # Create the actual secret macro
+            echo "Generated bindings: $BINDINGS"
+            
+            # Create the secret macro
             printf "behaviors {\n" > "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
             printf "    secret_macro: secret_macro {\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
             printf "        compatible = \"zmk,behavior-macro\";\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
             printf "        #binding-cells = <0>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            echo "        bindings = <$SECRET_CONTENT>;" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+            echo "        bindings = <$BINDINGS>;" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
             printf "        wait-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
             printf "        tap-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
             printf "    };\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
