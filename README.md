@@ -8,16 +8,17 @@ The build system automatically generates a `secret_macro` behavior during GitHub
 
 ### Implementation
 
-1. **Isolated Build Environment**: Config files are copied to a temporary directory to avoid contaminating the workspace
-2. **Dynamic Overlay Generation**: A `secret_macro.overlay` file is generated at build time with your secret content
+1. **String-to-Bindings Conversion**: Plain text strings are automatically converted to ZMK bindings at build time
+2. **Dynamic Overlay Generation**: A `secret_macro.overlay` file is generated during the build with your secret content
 3. **GitHub Secrets Integration**: Uses GitHub repository secrets to inject the actual macro content
+4. **Pre-baked Build Environment**: Utilizes a containerized Zephyr environment for consistent builds
 
 ### Generated Macro Structure
 
 The system creates a macro with these specifications:
 - **Name**: `secret_macro`
 - **Type**: ZMK behavior macro
-- **Timing**: 10ms wait and tap intervals (for quick typing of long strings. I haven't tested further, probably even 5ms is good)
+- **Timing**: 10ms wait and tap intervals (optimized for quick typing; 5ms may also work)
 - **Content**: Populated from GitHub repository secret
 
 ## Setup Instructions
@@ -27,7 +28,9 @@ The system creates a macro with these specifications:
 1. Go to your repository **Settings** → **Secrets and variables** → **Actions**
 2. Click **New repository secret**
 3. Name: `STRING_PLACEHOLDER`
-4. Value: Your ZMK macro bindings (e.g., `&kp H &kp E &kp L &kp L &kp O`)
+4. Value: Your secret text as a plain string (e.g., `Hello World!` or `MyP@ssw0rd123`)
+
+**Note**: The system now accepts plain text strings and automatically converts them to ZMK bindings. You can still use raw bindings (e.g., `&kp H &kp E &kp L &kp L &kp O`) if needed.
 
 ### 2. Use the Secret Macro in Your Keymap
 
@@ -47,10 +50,21 @@ keymap {
 };
 ```
 
-### 3. Adding build jobs
+### 3. Add Required Files and Workflow Jobs
 
-#### Step 3.0: Add the `Prepare Variables Job`
-First, add this job to set up the required environment variables (if you don't already have it):
+#### Step 3.0: Add the String Converter Script
+
+Create the file `.github/workflows/string_to_zmk.sh` in your repository with the converter script that handles character-to-binding translation. This script supports:
+- Letters (a-z, A-Z with automatic shift)
+- Numbers (0-9)
+- Special characters (!, @, #, $, etc.)
+- Punctuation marks
+
+Make sure the file is executable (it will be made executable automatically during the build).
+
+#### Step 3.1: Add the `Prepare Variables` Job
+
+Add this job to set up the required environment variables:
 
 ```yaml
 - name: Prepare variables
@@ -61,14 +75,12 @@ First, add this job to set up the required environment variables (if you don't a
     artifact_name: ${{ matrix.artifact-name }}
     snippet: ${{ matrix.snippet }}
   run: |
-    if [ -e zephyr/module.yml ]; then
-      export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE}'"
-      new_tmp_dir="${TMPDIR:-/tmp}/zmk-config"
-      mkdir -p "${new_tmp_dir}"
-      echo "base_dir=${new_tmp_dir}" >> $GITHUB_ENV
-    else
-      echo "base_dir=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
-    fi
+    # Use pre-baked west workspace inside the container image
+    echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
+    echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
+    echo "ZMK_AUTOCORRECT_PATH=${GITHUB_WORKSPACE}/zmk_autocorrect" >> $GITHUB_ENV
+    echo "ANTE_MORPH_PATH=${GITHUB_WORKSPACE}/zmk-antecedent-morph" >> $GITHUB_ENV
+    export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk_autocorrect;${GITHUB_WORKSPACE}/zmk-antecedent-morph'"
 
     if [ -n "${snippet}" ]; then
       extra_west_args="-S \"${snippet}\""
@@ -81,26 +93,11 @@ First, add this job to set up the required environment variables (if you don't a
     echo "artifact_name=${artifact_name:-${shield:+$shield-}${board}-zmk}" >> $GITHUB_ENV
 ```
 
-**Key Function**: This job sets the `base_dir` environment variable that determines whether to use an isolated temporary directory or the workspace directory, which is essential for the next steps.
-
-#### Step 3.1: Add the `Copy Config Files Job`
-Add this job to your `.github/workflows/build.yml` file after the "Prepare variables"  step:
-
-```yaml
-- name: Copy config files to isolated temporary directory
-  run: |
-    if [ "${{ env.base_dir }}" != "${GITHUB_WORKSPACE}" ]; then
-      mkdir "${{ env.base_dir }}/config"
-      cp -R config/* "${{ env.base_dir }}/config/"
-    fi
-```
-
-**Requirements**: 
-- Your workflow must have a `base_dir` environment variable set (typically in a "Prepare variables" step)
-- This job should run before any build steps that need the config files
+**Key Function**: This job sets environment variables for the pre-baked Zephyr workspace and module paths.
 
 #### Step 3.2: Add the `Secret Macro Generation` Job
-Add this job after the copy config files step:
+
+Add this job after the "Prepare variables" step:
 
 ```yaml
 - name: Generate secret macro overlay
@@ -108,7 +105,10 @@ Add this job after the copy config files step:
     echo "Generating secret macro overlay..."
     
     # Create config directory
-    mkdir -p "${{ env.base_dir }}/config"
+    mkdir -p "${GITHUB_WORKSPACE}/config"
+    
+    # Make the converter script executable
+    chmod +x "${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh"
     
     # Check if secret is available
     if [ -z "${{ secrets.STRING_PLACEHOLDER }}" ]; then
@@ -116,38 +116,66 @@ Add this job after the copy config files step:
       echo "Creating fallback macro that outputs placeholder text"
       
       # Create fallback macro
-      printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "        bindings = <&kp S &kp E &kp C &kp R &kp E &kp T>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      printf "behaviors {\n" > "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "    secret_macro: secret_macro {\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "        compatible = \"zmk,behavior-macro\";\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "        #binding-cells = <0>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "        bindings = <&kp S &kp E &kp C &kp R &kp E &kp T>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "        wait-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "        tap-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "    };\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "};\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
       
       echo "Fallback secret macro created (types 'SECRET')"
     else
-      echo "STRING_PLACEHOLDER secret found, creating custom macro"
+      echo "STRING_PLACEHOLDER secret found, converting string to bindings"
       
-      # Create the actual secret macro
-      printf "behaviors {\n" > "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "    secret_macro: secret_macro {\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "        compatible = \"zmk,behavior-macro\";\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "        #binding-cells = <0>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      echo "        bindings = <${{ secrets.STRING_PLACEHOLDER }}>;" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "        wait-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "        tap-ms = <10>;\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "    };\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
-      printf "};\n" >> "${{ env.base_dir }}/config/secret_macro.overlay"
+      SECRET_STRING="${{ secrets.STRING_PLACEHOLDER }}"
+      
+      # Check if the secret is already in binding format (starts with &)
+      if echo "$SECRET_STRING" | grep -q '^&'; then
+        echo "Secret appears to be in binding format already, using as-is"
+        BINDINGS="$SECRET_STRING"
+      else
+        echo "Converting string to ZMK bindings using external script..."
+        BINDINGS=$("${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh" "$SECRET_STRING")
+        
+        if [ $? -ne 0 ] || [ -z "$BINDINGS" ]; then
+          echo "Error: Failed to convert string to bindings"
+          exit 1
+        fi
+      fi
+      
+      echo "Generated bindings: $BINDINGS"
+      
+      # Create the secret macro
+      printf "behaviors {\n" > "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "    secret_macro: secret_macro {\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "        compatible = \"zmk,behavior-macro\";\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "        #binding-cells = <0>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      echo "        bindings = <$BINDINGS>;" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "        wait-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "        tap-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "    };\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      printf "};\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
       
       echo "Custom secret macro created successfully"
     fi
     
     # Verify the generated file
-    if [ -f "${{ env.base_dir }}/config/secret_macro.overlay" ]; then
+    if [ -f "${GITHUB_WORKSPACE}/config/secret_macro.overlay" ]; then
       echo "Generated overlay file:"
-      cat "${{ env.base_dir }}/config/secret_macro.overlay"
+      cat "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      
+      # Basic syntax validation
+      if grep -q "behaviors {" "${GITHUB_WORKSPACE}/config/secret_macro.overlay" && \
+         grep -q "secret_macro:" "${GITHUB_WORKSPACE}/config/secret_macro.overlay" && \
+         grep -q "bindings = <" "${GITHUB_WORKSPACE}/config/secret_macro.overlay"; then
+        echo "Overlay file structure validation passed"
+      else
+        echo "Error: Generated overlay file has invalid structure"
+        exit 1
+      fi
     else
       echo "Error: Failed to create secret_macro.overlay file"
       exit 1
@@ -156,18 +184,38 @@ Add this job after the copy config files step:
     STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
 ```
 
-#### Step 3.3: Verify Your Workflow Dependencies
-Ensure your workflow has these required elements:
-- A job that sets the `base_dir` environment variable
-- The `secrets.STRING_PLACEHOLDER` reference in the environment section
-- Your build job uses `-DZMK_CONFIG=${{ env.base_dir }}/config` to include the generated overlay
+#### Step 3.3: Ensure Your Build Command Uses the Config
 
+Your West build command should reference the workspace config directory:
+
+```yaml
+- name: West Build (${{ env.display_name }})
+  working-directory: /opt/zmk-env
+  shell: sh -x {0}
+  env:
+    ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
+  run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
+```
 ## Example Use Cases
+- **Passwords**: `MyP@ssw0rd123`
+- **Email addresses**: `john@example.com`
+- **Usernames**: `john_doe_2024`
 
-- **Passwords**: `&kp P &kp A &kp S &kp S &kp W &kp O &kp R &kp D`
-- **Email addresses**: `&kp J &kp O &kp H &kp N &kp AT &kp E &kp X &kp A &kp M &kp P &kp L &kp E &kp DOT &kp C &kp O &kp M`
-- **API keys**: Complex sequences of characters and numbers
-- **Personal shortcuts**: Frequently used text snippets
+### Raw Binding Format
+If you prefer to use raw ZMK bindings:
+- **Manual bindings**: `&kp H &kp E &kp L &kp L &kp O`
+- **With modifiers**: `&kp LS(H) &kp E &kp L &kp L &kp O`
+
+## Supported Characters
+
+The converter supports:
+- **Lowercase letters**: a-z
+- **Uppercase letters**: A-Z (automatically adds shift)
+- **Numbers**: 0-9
+- **Space**: (space character)
+- **Special characters**: ! @ # $ % ^ & * ( ) - _ = + [ ] { } \ | ; : ' " , < . > / ? ` ~
+
+Unsupported characters will generate a warning and be skipped during conversion.
 
 ## Important Notes
 
