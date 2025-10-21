@@ -70,9 +70,9 @@ jobs:
       - name: Skip copying into pre-baked workspace (no-op)
         run: echo "Using repo via ZMK_EXTRA_MODULES and config from GITHUB_WORKSPACE"
 
-      - name: Generate secret macro overlay
+      - name: Generate secret macro overlays
         run: |
-          echo "Generating secret macro overlay..."
+          echo "Generating secret macro overlays..."
           
           # Create config directory
           mkdir -p "${GITHUB_WORKSPACE}/config"
@@ -80,82 +80,89 @@ jobs:
           # Make the converter script executable
           chmod +x "${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh"
           
-          # Check if secret is available
-          if [ -z "${{ secrets.STRING_PLACEHOLDER }}" ]; then
-            echo "Warning: STRING_PLACEHOLDER secret not set or empty"
-            echo "Creating fallback macro that outputs placeholder text"
+          # Function to generate a macro
+          generate_macro() {
+            local secret_value="$1"
+            local macro_name="$2"
+            local output_file="$3"
+            local fallback_text="$4"
             
-            # Create fallback macro
-            printf "behaviors {\n" > "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "    secret_macro: secret_macro {\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "        compatible = \"zmk,behavior-macro\";\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "        #binding-cells = <0>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "        bindings = <&kp S &kp E &kp C &kp R &kp E &kp T>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "        wait-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "        tap-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "    };\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "};\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            
-            echo "Fallback secret macro created (types 'SECRET')"
-          else
-            echo "STRING_PLACEHOLDER secret found, converting string to bindings"
-            
-            SECRET_STRING="${{ secrets.STRING_PLACEHOLDER }}"
-            
-            # Check if the secret is already in binding format (starts with &)
-            if echo "$SECRET_STRING" | grep -q '^&'; then
-              echo "Secret appears to be in binding format already, using as-is"
-              BINDINGS="$SECRET_STRING"
-            else
-              echo "Converting string to ZMK bindings using external script..."
-              BINDINGS=$("${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh" "$SECRET_STRING")
+            if [ -z "$secret_value" ]; then
+              echo "Warning: $macro_name secret not set or empty"
+              echo "Creating fallback macro that outputs: $fallback_text"
               
-              if [ $? -ne 0 ] || [ -z "$BINDINGS" ]; then
-                echo "Error: Failed to convert string to bindings"
+              # Convert fallback text to bindings
+              BINDINGS=$("${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh" "$fallback_text" 2>/dev/null)
+              
+              printf "behaviors {\n" > "$output_file"
+              printf "    %s: %s {\n" "$macro_name" "$macro_name" >> "$output_file"
+              printf "        compatible = \"zmk,behavior-macro\";\n" >> "$output_file"
+              printf "        #binding-cells = <0>;\n" >> "$output_file"
+              echo "        bindings = <$BINDINGS>;" >> "$output_file"
+              printf "        wait-ms = <10>;\n" >> "$output_file"
+              printf "        tap-ms = <10>;\n" >> "$output_file"
+              printf "    };\n" >> "$output_file"
+              printf "};\n" >> "$output_file"
+              
+              echo "Fallback $macro_name created (types '$fallback_text')"
+            else
+              echo "$macro_name secret found, converting string to bindings"
+              
+              # Check if the secret is already in binding format (starts with &)
+              if echo "$secret_value" | grep -q '^&'; then
+                echo "Secret appears to be in binding format already, using as-is"
+                BINDINGS="$secret_value"
+              else
+                echo "Converting string to ZMK bindings using external script..."
+                BINDINGS=$("${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh" "$secret_value" 2>/dev/null)
+                
+                if [ $? -ne 0 ] || [ -z "$BINDINGS" ]; then
+                  echo "Error: Failed to convert string to bindings for $macro_name"
+                  exit 1
+                fi
+              fi
+              
+              # Create the secret macro
+              printf "behaviors {\n" > "$output_file"
+              printf "    %s: %s {\n" "$macro_name" "$macro_name" >> "$output_file"
+              printf "        compatible = \"zmk,behavior-macro\";\n" >> "$output_file"
+              printf "        #binding-cells = <0>;\n" >> "$output_file"
+              echo "        bindings = <$BINDINGS>;" >> "$output_file"
+              printf "        wait-ms = <10>;\n" >> "$output_file"
+              printf "        tap-ms = <10>;\n" >> "$output_file"
+              printf "    };\n" >> "$output_file"
+              printf "};\n" >> "$output_file"
+              
+              echo "Custom $macro_name created successfully"
+            fi
+            
+            # Verify the generated file
+            if [ -f "$output_file" ]; then
+              echo "$macro_name overlay file generated"
+              
+              # Basic syntax validation
+              if grep -q "behaviors {" "$output_file" && \
+                 grep -q "$macro_name:" "$output_file" && \
+                 grep -q "bindings = <" "$output_file"; then
+                echo "Overlay file structure validation passed for $macro_name"
+              else
+                echo "Error: Generated overlay file has invalid structure for $macro_name"
                 exit 1
               fi
-            fi
-            
-            # Create the secret macro
-            printf "behaviors {\n" > "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "    secret_macro: secret_macro {\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "        compatible = \"zmk,behavior-macro\";\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "        #binding-cells = <0>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            echo "        bindings = <$BINDINGS>;" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "        wait-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "        tap-ms = <10>;\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "    };\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            printf "};\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
-            
-            echo "Custom secret macro created successfully"
-          fi
-          
-          # Verify the generated file exists without displaying content
-          if [ -f "${GITHUB_WORKSPACE}/config/secret_macro.overlay" ]; then
-            echo "Secret macro overlay file generated"
-            
-            # Basic syntax validation
-            if grep -q "behaviors {" "${GITHUB_WORKSPACE}/config/secret_macro.overlay" && \
-               grep -q "secret_macro:" "${GITHUB_WORKSPACE}/config/secret_macro.overlay" && \
-               grep -q "bindings = <" "${GITHUB_WORKSPACE}/config/secret_macro.overlay"; then
-              echo "Overlay file structure validation passed"
-            
-            # Check if bootloader_fix.overlay exists and show its content
-            if [ -f "${GITHUB_WORKSPACE}/config/bootloader_fix.overlay" ]; then
-              echo "Bootloader fix overlay found"
             else
-              echo "Bootloader fix overlay not found"
-            fi
-            else
-              echo "Error: Generated overlay file has invalid structure"
+              echo "Error: Failed to create $output_file"
               exit 1
             fi
-          else
-            echo "Error: Failed to create secret_macro.overlay file"
-            exit 1
-          fi
+          }
+          
+          # Generate first secret macro
+          generate_macro "${{ secrets.STRING_PLACEHOLDER }}" "secret_macro" "${GITHUB_WORKSPACE}/config/secret_macro.overlay" "SECRET"
+          
+          # Generate second secret macro
+          generate_macro "${{ secrets.STRING_PLACEHOLDER2 }}" "secret_macro2" "${GITHUB_WORKSPACE}/config/secret_macro2.overlay" "SECRET2"
         env:
           STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
+          STRING_PLACEHOLDER2: ${{ secrets.STRING_PLACEHOLDER2 }}
 
       # Cache build artifacts - keymap changes invalidate, module changes don't
       - name: Cache West build
