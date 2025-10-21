@@ -167,7 +167,7 @@ jobs:
         shell: sh -x {0}
         env:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
-        run: west build -s zmk/app -d "${{ env.build_dir }}" -b seeeduino_xiao_ble -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }}
+        run: west build -s zmk/app -d "${{ env.build_dir }}" -b xiao_ble -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }}
 
       - name: Dongle Kconfig file
         run: |
@@ -185,10 +185,10 @@ jobs:
           mkdir "${{ env.build_dir }}/artifacts"
           if [ -f "${{ env.build_dir }}/zephyr/zmk.uf2" ]
           then
-            cp "${{ env.build_dir }}/zephyr/zmk.uf2" "${{ env.build_dir }}/artifacts/corne_dongle-seeeduino_xiao_ble-zmk.uf2"
+            cp "${{ env.build_dir }}/zephyr/zmk.uf2" "${{ env.build_dir }}/artifacts/corne_dongle-xiao_ble-zmk.uf2"
           elif [ -f "${{ env.build_dir }}/zephyr/zmk.bin" ]
           then
-            cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/corne_dongle-seeeduino_xiao_ble-zmk.bin"
+            cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/corne_dongle-xiao_ble-zmk.bin"
           fi
 
       - name: Archive Dongle Firmware
