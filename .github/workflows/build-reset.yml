@@ -16,9 +16,6 @@ jobs:
       contents: read
       packages: write
     steps:
-      - name: Configure Git Default Branch
-        run: |
-          git config --global init.defaultBranch main
       - name: Checkout
         uses: actions/checkout@v4
       - name: Log in to GHCR
