@@ -52,6 +52,7 @@ jobs:
 
           echo "zephyr_version=${ZEPHYR_VERSION}" >> $GITHUB_ENV
           echo "extra_cmake_args=-DSHIELD=\"corne_dongle\"${zmk_load_arg}" >> $GITHUB_ENV
+          echo "board=xiao_ble" >> $GITHUB_ENV
 
       - name: Verify Zephyr tree
         run: |
