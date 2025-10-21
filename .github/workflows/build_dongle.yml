@@ -1,6 +1,11 @@
 name: Build ZMK Dongle Only
 
-on: 
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'config/totem.keymap'
   workflow_dispatch:
 
 jobs:
@@ -196,15 +201,15 @@ jobs:
             cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-zmk.bin"
           fi
 
-      # Create a GitHub Release to allow direct .uf2 upload
-      - name: Create Release and Upload Asset
+      # Update the 'latest' GitHub Release with the latest .uf2 file
+      - name: Update Latest Release and Upload Asset
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: dongle-build-${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
-          name: Dongle Firmware ${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
+          tag_name: dongle-latest
+          name: Latest Dongle Firmware
           draft: false
           prerelease: false
-          files: ${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-zmk.uf2
+          files: ${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
