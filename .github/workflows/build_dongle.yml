@@ -14,13 +14,9 @@ jobs:
     container:
       image: ghcr.io/${{ github.repository_owner }}/zmk-zephyr:core-move-to-zephyr-4-1
     name: Build Dongle
-    permissions:  # Add this block
-      contents: write  # Allows creating tags and releases
+    permissions:  # Added for GITHUB_TOKEN to create releases
+      contents: write
     steps:
-      - name: Configure Git Default Branch
-        run: |
-          git config --global init.defaultBranch main
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -43,7 +39,7 @@ jobs:
         id: timestamp_generator
         run: |
           formatted_time=$(date -u +%d%m%Y_%H%M)
-          echo "ARTIFACT_NAME=zmk_dongle_$formatted_time.uf2" >> $GITHUB_OUTPUT
+          echo "ARTIFACT_NAME=zmk_dongle_$formatted_time" >> $GITHUB_OUTPUT
 
       # Use fixed build directory for caching
       - name: Create build directory
@@ -51,7 +47,6 @@ jobs:
           echo "build_dir=${GITHUB_WORKSPACE}/build-dongle" >> $GITHUB_ENV
 
       - name: Prepare variables
-        shell: sh -x {0}
         run: |
           # Use pre-baked west workspace inside the container image
           echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
@@ -177,7 +172,9 @@ jobs:
         shell: sh -x {0}
         env:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
-        run: west build -s zmk/app -d "${{ env.build_dir }}" -b xiao_ble -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }}
+        run: |
+          west build -s zmk/app -d "${{ env.build_dir }}" -b xiao_ble -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }} || \
+          (echo "Build failed, showing CMake output:" && cat ${{ env.build_dir }}/build.log && exit 1)
 
       - name: Dongle Kconfig file
         run: |
@@ -192,13 +189,16 @@ jobs:
       - name: Rename artifacts
         shell: sh -x {0}
         run: |
-          mkdir "${{ env.build_dir }}/artifacts"
-          if [ -f "${{ env.build_dir }}/zephyr/zmk.uf2" ]
-          then
-            cp "${{ env.build_dir }}/zephyr/zmk.uf2" "${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-zmk.uf2"
-          elif [ -f "${{ env.build_dir }}/zephyr/zmk.bin" ]
-          then
-            cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-zmk.bin"
+          mkdir -p "${{ env.build_dir }}/artifacts"
+          UF2_FILE="${{ env.build_dir }}/zephyr/zmk.uf2"
+          TIMESTAMPED_NAME="totem_dongle-xiao_ble-${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}"
+          
+          if [ -f "$UF2_FILE" ]; then
+            echo "Copying .uf2 file: $UF2_FILE -> ${{ env.build_dir }}/artifacts/${TIMESTAMPED_NAME}.uf2"
+            cp "$UF2_FILE" "${{ env.build_dir }}/artifacts/${TIMESTAMPED_NAME}.uf2"
+          else
+            echo "Error: No zmk.uf2 found in build output!"
+            exit 1
           fi
 
       # Update the 'latest' GitHub Release with the latest .uf2 file
@@ -209,7 +209,7 @@ jobs:
           name: Latest Dongle Firmware
           draft: false
           prerelease: false
-          files: ${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
+          files: ${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}.uf2
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
