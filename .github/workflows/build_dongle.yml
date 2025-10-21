@@ -32,7 +32,7 @@ jobs:
         id: timestamp_generator
         run: |
           formatted_time=$(date -u +%d%m%Y_%H%M)
-          echo "ARTIFACT_NAME=zmk_dongle_$formatted_time" >> $GITHUB_OUTPUT
+          echo "ARTIFACT_NAME=zmk_dongle_$formatted_time.uf2" >> $GITHUB_OUTPUT
         shell: bash
 
       # Use fixed build directory for caching
@@ -190,3 +190,26 @@ jobs:
           then
             cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-zmk.bin"
           fi
+
+      # Create a GitHub Release to allow direct .uf2 upload
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: dongle-build-${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
+          release_name: Dongle Firmware ${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
+          draft: false
+          prerelease: false
+
+      # Upload the .uf2 file as a release asset to avoid zipping
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-zmk.uf2
+          asset_name: ${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
+          asset_content_type: application/octet-stream
