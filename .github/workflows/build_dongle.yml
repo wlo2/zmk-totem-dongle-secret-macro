@@ -51,7 +51,7 @@ jobs:
           export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk_autocorrect;${GITHUB_WORKSPACE}/zmk-antecedent-morph'"
 
           echo "zephyr_version=${ZEPHYR_VERSION}" >> $GITHUB_ENV
-          echo "extra_cmake_args=-DSHIELD=\"corne_dongle\"${zmk_load_arg}" >> $GITHUB_ENV
+          echo "extra_cmake_args=-DSHIELD=\"totem_dongle\"${zmk_load_arg}" >> $GITHUB_ENV
           echo "board=xiao_ble" >> $GITHUB_ENV
 
       - name: Verify Zephyr tree
@@ -185,10 +185,10 @@ jobs:
           mkdir "${{ env.build_dir }}/artifacts"
           if [ -f "${{ env.build_dir }}/zephyr/zmk.uf2" ]
           then
-            cp "${{ env.build_dir }}/zephyr/zmk.uf2" "${{ env.build_dir }}/artifacts/corne_dongle-xiao_ble-zmk.uf2"
+            cp "${{ env.build_dir }}/zephyr/zmk.uf2" "${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-zmk.uf2"
           elif [ -f "${{ env.build_dir }}/zephyr/zmk.bin" ]
           then
-            cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/corne_dongle-xiao_ble-zmk.bin"
+            cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-zmk.bin"
           fi
 
       - name: Archive Dongle Firmware
