@@ -2,7 +2,6 @@
 
 # String to ZMK Bindings Converter
 # Converts plain text strings to ZMK keyboard bindings
-# Location: .github/workflows/string_to_zmk.sh
 
 string_to_bindings() {
     local input="$1"

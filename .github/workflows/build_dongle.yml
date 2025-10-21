@@ -1,39 +1,14 @@
-name: Build ZMK firmware
+name: Build ZMK Dongle Only
 
 on: 
-  push:
-  pull_request:
   workflow_dispatch:
-    inputs:
-      include_settings_reset:
-        description: 'Build firmware using pre-baked image'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
-  matrix:
-    runs-on: ubuntu-latest
-    name: Fetch Build Keyboards
-    outputs:
-      build_matrix: ${{ env.build_matrix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Fetch Build Matrix
-        run: |
-          echo "build_matrix=$(yq -oj -I0 'build.yaml')" >> $GITHUB_ENV
-          yq -oj "build.yaml"
-
   build:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/${{ github.repository_owner }}/zmk-zephyr:core-move-to-zephyr-4-1
-    needs: matrix
-    name: Build
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.matrix.outputs.build_matrix) }}
+    name: Build Dongle
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,18 +28,20 @@ jobs:
           ref: v1
           path: zmk-antecedent-morph
 
+      - name: Get formatted timestamp for artifact name
+        id: timestamp_generator
+        run: |
+          formatted_time=$(date -u +%d%m%Y_%H%M)
+          echo "ARTIFACT_NAME=zmk_dongle_$formatted_time" >> $GITHUB_OUTPUT
+        shell: bash
+
       # Use fixed build directory for caching
       - name: Create build directory
         run: |
-          echo "build_dir=${GITHUB_WORKSPACE}/build-${{ matrix.board }}-${{ matrix.shield }}" >> $GITHUB_ENV
+          echo "build_dir=${GITHUB_WORKSPACE}/build-dongle" >> $GITHUB_ENV
 
       - name: Prepare variables
         shell: sh -x {0}
-        env:
-          board: ${{ matrix.board }}
-          shield: ${{ matrix.shield }}
-          artifact_name: ${{ matrix.artifact-name }}
-          snippet: ${{ matrix.snippet }}
         run: |
           # Use pre-baked west workspace inside the container image
           echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
@@ -73,15 +50,8 @@ jobs:
           echo "ANTE_MORPH_PATH=${GITHUB_WORKSPACE}/zmk-antecedent-morph" >> $GITHUB_ENV
           export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk_autocorrect;${GITHUB_WORKSPACE}/zmk-antecedent-morph'"
 
-          if [ -n "${snippet}" ]; then
-            extra_west_args="-S \"${snippet}\""
-          fi
-
           echo "zephyr_version=${ZEPHYR_VERSION}" >> $GITHUB_ENV
-          echo "extra_west_args=${extra_west_args}" >> $GITHUB_ENV
-          echo "extra_cmake_args=${shield:+-DSHIELD=\"$shield\"}${zmk_load_arg}" >> $GITHUB_ENV
-          echo "display_name=${shield:+$shield - }${board}" >> $GITHUB_ENV
-          echo "artifact_name=${artifact_name:-${shield:+$shield-}${board}-zmk}" >> $GITHUB_ENV
+          echo "extra_cmake_args=-DSHIELD=\"corne_dongle\"${zmk_load_arg}" >> $GITHUB_ENV
 
       - name: Verify Zephyr tree
         run: |
@@ -166,8 +136,7 @@ jobs:
             
             # Check if bootloader_fix.overlay exists and show its content
             if [ -f "${GITHUB_WORKSPACE}/config/bootloader_fix.overlay" ]; then
-              echo "Bootloader fix overlay found:"
-              cat "${GITHUB_WORKSPACE}/config/bootloader_fix.overlay"
+              echo "Bootloader fix overlay found"
             else
               echo "Bootloader fix overlay not found"
             fi
@@ -182,29 +151,24 @@ jobs:
         env:
           STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
 
-      # Note: GitHub Actions caches have a fixed 7-day retention for unused caches.
-      # This cannot be changed. Caches are kept alive by accessing them regularly.
-      # If you need longer retention, consider using artifacts instead (configurable up to 90 days).
-      
       # Cache build artifacts - keymap changes invalidate, module changes don't
-      # (since you update modules frequently and want fresh builds with them)
       - name: Cache West build
         uses: actions/cache@v4
         with:
           path: |
-            ${{ github.workspace }}/build-${{ matrix.board }}-${{ matrix.shield }}
-          key: west-build-${{ matrix.board }}-${{ matrix.shield }}-${{ hashFiles('config/*.conf', 'config/*.keymap', 'config/*.dtsi') }}-v1
+            ${{ github.workspace }}/build-dongle
+          key: west-build-dongle-${{ hashFiles('config/*.conf', 'config/*.keymap', 'config/*.dtsi') }}-v1
           restore-keys: |
-            west-build-${{ matrix.board }}-${{ matrix.shield }}-
+            west-build-dongle-
 
-      - name: West Build (${{ env.display_name }})
+      - name: West Build (Dongle)
         working-directory: /opt/zmk-env
         shell: sh -x {0}
         env:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
-        run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
+        run: west build -s zmk/app -d "${{ env.build_dir }}" -b seeeduino_xiao_ble -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }}
 
-      - name: ${{ env.display_name }} Kconfig file
+      - name: Dongle Kconfig file
         run: |
           if [ -f "${{ env.build_dir }}/zephyr/.config" ]
           then
@@ -220,33 +184,14 @@ jobs:
           mkdir "${{ env.build_dir }}/artifacts"
           if [ -f "${{ env.build_dir }}/zephyr/zmk.uf2" ]
           then
-            cp "${{ env.build_dir }}/zephyr/zmk.uf2" "${{ env.build_dir }}/artifacts/${{ env.artifact_name }}.uf2"
+            cp "${{ env.build_dir }}/zephyr/zmk.uf2" "${{ env.build_dir }}/artifacts/corne_dongle-seeeduino_xiao_ble-zmk.uf2"
           elif [ -f "${{ env.build_dir }}/zephyr/zmk.bin" ]
           then
-            cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/${{ env.artifact_name }}.bin"
+            cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/corne_dongle-seeeduino_xiao_ble-zmk.bin"
           fi
 
-      - name: Archive (${{ env.display_name }})
+      - name: Archive Dongle Firmware
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-${{ env.artifact_name }}
-          path: ${{ env.build_dir }}/artifacts
-
-  merge:
-    runs-on: ubuntu-latest
-    needs: build
-    name: Merge Output Artifacts
-    steps:
-      - name: Get formatted timestamp for archive name
-        id: timestamp_generator
-        run: |
-          formatted_time=$(date -u +%d%m%Y_%H%M)
-          echo "ARTIFACT_NAME=zmk_$formatted_time" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4
-        with:
           name: ${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
-          pattern: artifact-*
-          delete-merged: true
+          path: ${{ env.build_dir }}/artifacts

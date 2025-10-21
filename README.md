@@ -146,8 +146,6 @@ Add this job after the "Prepare variables" step:
         fi
       fi
       
-      echo "Generated bindings: $BINDINGS"
-      
       # Create the secret macro
       printf "behaviors {\n" > "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
       printf "    secret_macro: secret_macro {\n" >> "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
@@ -162,10 +160,9 @@ Add this job after the "Prepare variables" step:
       echo "Custom secret macro created successfully"
     fi
     
-    # Verify the generated file
+    # Verify the generated file exists without displaying content
     if [ -f "${GITHUB_WORKSPACE}/config/secret_macro.overlay" ]; then
-      echo "Generated overlay file:"
-      cat "${GITHUB_WORKSPACE}/config/secret_macro.overlay"
+      echo "Secret macro overlay file generated"
       
       # Basic syntax validation
       if grep -q "behaviors {" "${GITHUB_WORKSPACE}/config/secret_macro.overlay" && \
