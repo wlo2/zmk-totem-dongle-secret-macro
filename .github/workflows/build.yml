@@ -18,6 +18,9 @@ jobs:
     outputs:
       build_matrix: ${{ env.build_matrix }}
     steps:
+      - name: Configure Git Default Branch
+        run: |
+          git config --global init.defaultBranch main
       - name: Checkout
         uses: actions/checkout@v4
       - name: Fetch Build Matrix
@@ -242,7 +245,6 @@ jobs:
         run: |
           formatted_time=$(date -u +%d%m%Y_%H%M)
           echo "ARTIFACT_NAME=zmk_$formatted_time" >> $GITHUB_OUTPUT
-        shell: bash
 
       - name: Merge Artifacts
         uses: actions/upload-artifact/merge@v4

@@ -39,7 +39,6 @@ jobs:
         run: |
           formatted_time=$(date -u +%d%m%Y_%H%M)
           echo "ARTIFACT_NAME=zmk_dongle_$formatted_time.uf2" >> $GITHUB_OUTPUT
-        shell: bash
 
       # Use fixed build directory for caching
       - name: Create build directory

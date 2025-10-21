@@ -16,6 +16,9 @@ jobs:
       contents: read
       packages: write
     steps:
+      - name: Configure Git Default Branch
+        run: |
+          git config --global init.defaultBranch main
       - name: Checkout
         uses: actions/checkout@v4
       - name: Log in to GHCR
@@ -54,7 +57,7 @@ jobs:
       - name: West Build (settings_reset)
         working-directory: /opt/zmk-env
         run: |
-          west build -s zmk/app -b seeeduino_xiao_ble -- \
+          west build -s zmk/app -b xiao_ble -- \
             -DZMK_CONFIG=${GITHUB_WORKSPACE}/config \
             -DSHIELD=settings_reset
 
