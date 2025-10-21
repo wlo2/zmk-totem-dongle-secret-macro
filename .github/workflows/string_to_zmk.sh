@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# String to ZMK Bindings Converter
 # Converts plain text strings to ZMK keyboard bindings
 
 string_to_bindings() {
