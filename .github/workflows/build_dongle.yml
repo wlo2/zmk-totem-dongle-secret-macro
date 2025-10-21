@@ -190,9 +190,3 @@ jobs:
           then
             cp "${{ env.build_dir }}/zephyr/zmk.bin" "${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-zmk.bin"
           fi
-
-      - name: Archive Dongle Firmware
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
-          path: ${{ env.build_dir }}/artifacts
