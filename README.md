@@ -193,15 +193,6 @@ Your West build command should reference the workspace config directory:
     ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
   run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" ${{ env.extra_west_args }} -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
 ```
-## Example Use Cases
-- **Passwords**: `MyP@ssw0rd123`
-- **Email addresses**: `john@example.com`
-- **Usernames**: `john_doe_2024`
-
-### Raw Binding Format
-If you prefer to use raw ZMK bindings:
-- **Manual bindings**: `&kp H &kp E &kp L &kp L &kp O`
-- **With modifiers**: `&kp LS(H) &kp E &kp L &kp L &kp O`
 
 ## Supported Characters
 
@@ -219,10 +210,9 @@ Unsupported characters will generate a warning and be skipped during conversion.
 - The secret macro is only available in GitHub Actions builds
 - Local builds will fail if they reference `&secret_macro` without the overlay
 - Consider using conditional compilation if you need local build compatibility
-- Keep your secret content in valid ZMK macro binding format
 
 ## Security considerations
-Although not fully secure—someone with physical access to the board could potentially extract the secret—doing so requires knowing the board layout and is difficult to reverse-engineer if the layout is unknown. Evaluate your risks.
+Although not fully secure—someone with physical access to the board could potentially extract the secret—doing so requires knowing the board layout and is close to impossible to bruteforce if the layout is unknown to the attacker. Evaluate your risks.
 
 # Config modifications
 
