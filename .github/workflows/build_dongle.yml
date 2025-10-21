@@ -9,7 +9,14 @@ jobs:
     container:
       image: ghcr.io/${{ github.repository_owner }}/zmk-zephyr:core-move-to-zephyr-4-1
     name: Build Dongle
+    permissions:  # Add this block
+      contents: write  # Allows creating tags and releases
     steps:
+      - name: Configure Git Default Branch
+        run: |
+          git config --global init.defaultBranch main
+        shell: bash
+        
       - name: Checkout
         uses: actions/checkout@v4
 
