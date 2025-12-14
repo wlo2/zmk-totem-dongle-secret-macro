@@ -10,8 +10,8 @@ manifest:
       url-base: https://github.com/wlo2 
   projects:
     - name: zmk
-      remote: petejohanson
-      revision: core/move-to-zephyr-4-1
+      remote: zmkfirmware
+      revision: main
       import: app/west.yml
     - name: zmk-antecedent-morph
       remote: ssbb
