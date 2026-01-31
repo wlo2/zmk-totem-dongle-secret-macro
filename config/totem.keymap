@@ -50,11 +50,13 @@
             #binding-cells = <0>;
 
             // Default behavior - repeat the last key
+
             defaults = <&key_repeat>;
             antecedents = <SQT G U W Y R>;
             bindings = <&kp R &kp S &kp E &kp H &kp COMMA &kp L>;
 
             // Maximum delay to consider the antecedent
+
             max-delay-ms = <5000>;
         };
 
@@ -124,30 +126,30 @@
         QWERTY {
             display-name = "Qwerty";
             bindings = <
-               &kp Q  &kp W  &kp E            &kp R      &kp T         &kp Y       &kp U       &kp I          &kp O    &kp P
-               &kp A  &kp S  &kp D            &kp F      &kp G         &kp H       &kp J       &kp K          &kp L    &kp SEMICOLON
-&mt LSHFT ESC  &kp Z  &kp X  &kp C            &kp V      &kp B         &kp N       &kp M       &kp COMMA      &kp DOT  &kp SLASH      &kp APOSTROPHE
-                             &mt LCTRL ENTER  &kp SPACE  &lt 3 BSPC    &sk LSHIFT  &lt 2 BSPC  &mt LCTRL TAB
+               &kp Q  &kp W  &kp E                   &kp R      &kp T         &kp Y       &kp U       &kp I          &kp O    &kp P
+               &kp A  &kp S  &kp D                   &kp F      &kp G         &kp H       &kp J       &kp K          &kp L    &kp SEMICOLON
+&mt LSHFT ESC  &kp Z  &kp X  &kp C                   &kp V      &kp B         &kp N       &kp M       &kp COMMA      &kp DOT  &kp SLASH      &kp APOSTROPHE
+                             &mt LEFT_COMMAND ENTER  &kp SPACE  &lt 3 BSPC    &sk LSHIFT  &lt 2 BSPC  &mt LCTRL TAB
             >;
         };
 
         Whirl_mod {
             display-name = "Whirl_mod";
             bindings = <
-                 &mt LEFT_SHIFT ESCAPE  &kp G  &kp D            &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
-                 &kp N                  &kp S  &kp T            &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
-&magic_repeat_l  &kp B                  &kp C  &kp P            &kp W      &kp Z              &kp X            &kp L          &kp U          &kp O       &kp Y      &kp COMMA
-                                               &mt LCTRL ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &magic_repeat  &sk LSHIFT
+                 &mt LEFT_SHIFT ESCAPE  &kp G  &kp D                   &kp F      &kp K              &kp SQT          &kp J          &kp SEMICOLON  &kp PERIOD  &kp SLASH
+                 &kp N                  &kp S  &kp T                   &kp H      &kp M              &kp V            &kp R          &kp E          &kp A       &kp I
+&magic_repeat_l  &kp B                  &kp C  &kp P                   &kp W      &kp Z              &kp X            &kp L          &kp U          &kp O       &kp Y      &kp COMMA
+                                               &mt LEFT_COMMAND ENTER  &kp SPACE  &lt 3 BACKSPACE    &lt 2 BACKSPACE  &magic_repeat  &sk LSHIFT
             >;
         };
 
         Nav {
             display-name = "Nav";
             bindings = <
-           &Remnote_arrow  &kp HOME     &kp UP_ARROW  &kp END            &kp LBRC    &kp RBRC  &trans  &trans           &trans          &kp RIGHT_BRACKET
-           &kp DEL         &kp LEFT     &kp DOWN      &kp RIGHT          &kp LBKT    &kp RBKT  &QU     &magic_repeat_l  &space_comma    &kp LEFT_BRACKET
-&kp TILDE  &kp LEFT_WIN    &kp LS(TAB)  &kp TAB       &kp LC(BACKSPACE)  &kp LPAR    &kp RPAR  &none   &kp RA(COMMA)    &kp RA(PERIOD)  &kp RA(MINUS)      &kp PRINTSCREEN
-                                        &trans        &magic_repeat_l    &trans      &trans    &trans  &trans
+           &Remnote_arrow  &kp LG(LEFT)  &kp UP_ARROW  &kp LG(RIGHT)      &kp LBRC    &kp RBRC  &trans  &trans           &trans          &kp RIGHT_BRACKET
+           &kp DEL         &kp LEFT      &kp DOWN      &kp RIGHT          &kp LBKT    &kp RBKT  &QU     &magic_repeat_l  &space_comma    &kp LEFT_BRACKET
+&kp TILDE  &kp LEFT_WIN    &kp LS(TAB)   &kp TAB       &kp LC(BACKSPACE)  &kp LPAR    &kp RPAR  &none   &kp RA(COMMA)    &kp RA(PERIOD)  &kp RA(MINUS)      &kp PRINTSCREEN
+                                         &trans        &magic_repeat_l    &trans      &trans    &trans  &trans
             >;
         };
 
@@ -163,10 +165,10 @@
 
         Tri-layer {
             bindings = <
-        &kp F6  &kp F7  &kp F8  &kp F9     &kp F10          &ac_togg  &kp F11  &kp F12  &kp F13  &kp F14
-        &none   &none   &secret_macro2   &ahahahah  &secret_macro    &tog 1    &none    &none    &none    &trans
-&trans  &kp F1  &kp F2  &kp F3  &kp F4     &kp F5           &tog 5    &trans   &trans   &trans   &trans   &trans
-                        &trans  &trans     &trans           &trans    &trans   &trans
+        &kp F6  &kp F7  &kp F8          &kp F9     &kp F10          &ac_togg  &kp F11  &kp F12  &kp F13  &kp F14
+        &none   &none   &secret_macro2  &ahahahah  &secret_macro    &tog 1    &none    &none    &none    &trans
+&trans  &kp F1  &kp F2  &kp F3          &kp F4     &kp F5           &tog 5    &trans   &trans   &trans   &trans   &trans
+                        &trans          &trans     &trans           &trans    &trans   &trans
             >;
         };
 
