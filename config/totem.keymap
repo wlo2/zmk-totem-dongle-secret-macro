@@ -146,10 +146,10 @@
         Nav {
             display-name = "Nav";
             bindings = <
-           &Remnote_arrow  &kp LG(LEFT)  &kp UP_ARROW  &kp LG(RIGHT)      &kp LBRC    &kp RBRC  &trans  &trans           &trans          &kp RIGHT_BRACKET
-           &kp DEL         &kp LEFT      &kp DOWN      &kp RIGHT          &kp LBKT    &kp RBKT  &QU     &magic_repeat_l  &space_comma    &kp LEFT_BRACKET
-&kp TILDE  &kp LEFT_WIN    &kp LS(TAB)   &kp TAB       &kp LC(BACKSPACE)  &kp LPAR    &kp RPAR  &none   &kp RA(COMMA)    &kp RA(PERIOD)  &kp RA(MINUS)      &kp PRINTSCREEN
-                                         &trans        &magic_repeat_l    &trans      &trans    &trans  &trans
+           &Remnote_arrow  &kp LG(LEFT)  &kp UP_ARROW  &kp LG(RIGHT)      &kp LBRC    &kp RBRC  &kp LC(LEFT)  &trans           &kp LC(RIGHT)   &kp RIGHT_BRACKET
+           &kp DEL         &kp LEFT      &kp DOWN      &kp RIGHT          &kp LBKT    &kp RBKT  &QU           &magic_repeat_l  &space_comma    &kp LEFT_BRACKET
+&kp TILDE  &kp LEFT_WIN    &kp LS(TAB)   &kp TAB       &kp LC(BACKSPACE)  &kp LPAR    &kp RPAR  &none         &kp RA(COMMA)    &kp RA(PERIOD)  &kp RA(MINUS)      &kp PRINTSCREEN
+                                         &trans        &magic_repeat_l    &trans      &trans    &trans        &trans
             >;
         };
 
