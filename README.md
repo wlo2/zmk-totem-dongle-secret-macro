@@ -176,11 +176,6 @@ done
 echo "${output# }"
 ```
 
-Make it executable:
-```bash
-chmod +x .github/workflows/string_to_zmk.sh
-```
-
 ### Step 2: Replace Your Build Workflow
 
 Replace your `.github/workflows/build.yml` with this basic secret macro workflow:
@@ -415,7 +410,7 @@ Initially forked from https://github.com/eigatech/zmk-config
 
 ## `&bootloader` Support for nRF52840 with Adafruit bootloader (Zephyr 4.1)
 
-This configuration uses ZMK's bootloader support from the Zephyr 4.1 branch (`petejohanson/zmk@core/move-to-zephyr-4-1`). The `&bootloader` behavior allows entering the device bootloader from a keypress.
+This configuration uses ZMK's bootloader support using Zephyr 4.1. The `&bootloader` behavior allows entering the device bootloader from a keypress.
 
 ### Configuration
 
@@ -442,4 +437,3 @@ CONFIG_ZMK_BOOTMODE_MAGIC_VALUE_BOOTLOADER_TYPE_ADAFRUIT_NRF52=y
 
 - **Boards**: `xiao_ble` board definition for Seeeduino XIAO BLE and BLE Sense
 - **UF2 bootloader**: Adafruit/TinyUF2 bootloader version 0.9.2 or later required on XIAO BLE boards. Older Seeed UF2 bootloaders (e.g. 0.6.x) may not support this behavior.
-- **ZMK branch**: `petejohanson/zmk@core/move-to-zephyr-4-1` with Zephyr 4.1 support (still in beta)

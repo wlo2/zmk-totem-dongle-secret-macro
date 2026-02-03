@@ -2,12 +2,10 @@ manifest:
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
-    - name: petejohanson
-      url-base: https://github.com/petejohanson
     - name: ssbb
       url-base: https://github.com/ssbb
     - name: wlo2
-      url-base: https://github.com/wlo2 
+      url-base: https://github.com/wlo2
   projects:
     - name: zmk
       remote: zmkfirmware
@@ -18,6 +16,6 @@ manifest:
       revision: v1
     - name: zmk_autocorrect
       remote: wlo2
-      revision: main   
+      revision: main
   self:
     path: config
