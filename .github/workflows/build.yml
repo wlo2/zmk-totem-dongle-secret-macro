@@ -11,6 +11,13 @@ on:
         default: false
         type: boolean
 
+# A newer run cancels an older one for the same ref. Keyed on github.ref so a
+# feature-branch push never cancels a main build. This workflow only produces
+# workflow artifacts, so there is nothing external left half-done by a cancel.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   matrix:
     runs-on: ubuntu-latest
@@ -155,8 +162,24 @@ jobs:
           echo "ARTIFACT_NAME=zmk_$formatted_time" >> $GITHUB_OUTPUT
 
       - name: Merge Artifacts
+        id: merged
         uses: actions/upload-artifact/merge@v7
         with:
           name: ${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
           pattern: artifact-*
           delete-merged: true
+
+      # The per-board artifacts are removed by delete-merged, so the merged
+      # bundle is the only URL worth surfacing here.
+      - name: Job summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "### Firmware"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Bundle | [\`${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}.zip\`](${{ steps.merged.outputs.artifact-url }}) |"
+            echo "| Contents | totem_left.uf2, totem_right.uf2, totem_dongle.uf2 |"
+            echo "| SHA-256 | \`${{ steps.merged.outputs.artifact-digest }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"

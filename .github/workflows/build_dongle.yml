@@ -8,6 +8,14 @@ on:
       - 'config/totem.keymap'
   workflow_dispatch:
 
+# A newer run cancels an older one for the same ref. The release upload and
+# asset prune are the only externally-visible side effects and both are
+# idempotent -- a cancelled run is re-done by the next one -- so cancelling
+# mid-flight is safe here.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -39,7 +47,11 @@ jobs:
         id: timestamp_generator
         run: |
           formatted_time=$(date -u +%d%m%Y_%H%M)
-          echo "ARTIFACT_NAME=zmk_dongle_$formatted_time" >> $GITHUB_OUTPUT
+          # This stem is used verbatim for both the workflow artifact and the
+          # release asset. With upload-artifact's archive: false the filename
+          # becomes the artifact name, so the file on disk must already be
+          # called exactly what you want to download.
+          echo "ARTIFACT_NAME=totem_dongle_$formatted_time" >> $GITHUB_OUTPUT
 
       # Use fixed build directory for caching
       - name: Create build directory
@@ -98,8 +110,8 @@ jobs:
         run: |
           mkdir -p "${{ env.build_dir }}/artifacts"
           UF2_FILE="${{ env.build_dir }}/zephyr/zmk.uf2"
-          TIMESTAMPED_NAME="totem_dongle-xiao_ble-${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}"
-          
+          TIMESTAMPED_NAME="${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}"
+
           if [ -f "$UF2_FILE" ]; then
             echo "Copying .uf2 file: $UF2_FILE -> ${{ env.build_dir }}/artifacts/${TIMESTAMPED_NAME}.uf2"
             cp "$UF2_FILE" "${{ env.build_dir }}/artifacts/${TIMESTAMPED_NAME}.uf2"
@@ -108,15 +120,75 @@ jobs:
             exit 1
           fi
 
+      - name: Archive dongle firmware
+        id: artifact
+        uses: actions/upload-artifact@v7
+        with:
+          # archive: false uploads the .uf2 unzipped so it downloads ready to
+          # drag onto the bootloader drive. It accepts exactly one file and
+          # ignores `name:`, taking the artifact name from the filename --
+          # hence totem_dongle_DDMMYYYY_HHMM.uf2 above.
+          archive: false
+          path: ${{ env.build_dir }}/artifacts/${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}.uf2
+          retention-days: 30
+
       # Update the 'latest' GitHub Release with the latest .uf2 file
       - name: Update Latest Release and Upload Asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: dongle-latest
           name: Latest Dongle Firmware
           draft: false
           prerelease: false
-          files: ${{ env.build_dir }}/artifacts/totem_dongle-xiao_ble-${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}.uf2
+          files: ${{ env.build_dir }}/artifacts/${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}.uf2
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Job summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "### Dongle firmware"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| File | \`${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}.uf2\` |"
+            echo "| Artifact | [direct download](${{ steps.artifact.outputs.artifact-url }}) |"
+            echo "| Release | [dongle-latest](${{ github.server_url }}/${{ github.repository }}/releases/tag/dongle-latest) |"
+            echo "| SHA-256 | \`${{ steps.artifact.outputs.artifact-digest }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Kept in its own job because the Zephyr build container has no `gh`, while
+  # ubuntu-latest ships it preinstalled. `needs: build` also means a failed
+  # build never prunes.
+  prune:
+    runs-on: ubuntu-latest
+    needs: build
+    name: Prune old release assets
+    permissions:
+      contents: write
+    steps:
+      - name: Keep only the newest assets on dongle-latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP: 5
+        run: |
+          set -euo pipefail
+
+          # REST returns snake_case (created_at), unlike `gh release view --json`.
+          # `|| true` keeps the first-ever run (no release yet) from failing.
+          stale=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/dongle-latest" \
+                    --jq ".assets | sort_by(.created_at) | reverse | .[${KEEP}:] | .[] | \"\(.id) \(.name)\"" \
+                  2>/dev/null || true)
+
+          if [ -z "${stale}" ]; then
+            echo "Nothing to prune: dongle-latest holds ${KEEP} assets or fewer."
+            exit 0
+          fi
+
+          echo "${stale}" | while read -r id name; do
+            [ -n "${id}" ] || continue
+            echo "Deleting ${name} (asset id ${id})"
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/${id}"
+          done

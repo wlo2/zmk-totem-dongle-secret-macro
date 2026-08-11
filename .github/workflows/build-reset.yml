@@ -8,6 +8,14 @@ on:
         required: false
         default: 'Manual settings reset needed'
 
+# Deliberately WITHOUT cancel-in-progress. This workflow pushes
+# ghcr.io/<owner>/zmk-zephyr:latest, which every other workflow uses as its
+# build container -- cancelling mid-push can leave a broken manifest on :latest
+# and break all builds. Grouping still prevents two dispatches racing the same
+# tag; a second run queues behind the first instead.
+concurrency:
+  group: ${{ github.workflow }}
+
 jobs:
   build-image:
     name: Build and push prebaked Zephyr image
@@ -19,20 +27,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract metadata (tags, labels)
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/zmk-zephyr
           tags: |
             type=raw,value=latest
       - name: Build and push image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: .github/workflows/Dockerfile
@@ -69,8 +77,26 @@ jobs:
           fi
 
       - name: Upload settings reset firmware
+        id: artifact
         uses: actions/upload-artifact@v7
         with:
-          name: settings_reset
+          # archive: false (new in v7) uploads the single file unzipped, so the
+          # download is settings_reset.uf2 directly rather than a zip to extract.
+          # Only valid for a single file, and it makes the filename the artifact
+          # name -- `name:` is ignored, so it is omitted here.
+          archive: false
           path: /opt/zmk-env/firmware/settings_reset.uf2
           retention-days: 30
+
+      - name: Job summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "### Settings reset firmware"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| File | \`settings_reset.uf2\` |"
+            echo "| Artifact | [direct download](${{ steps.artifact.outputs.artifact-url }}) |"
+            echo "| SHA-256 | \`${{ steps.artifact.outputs.artifact-digest }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
