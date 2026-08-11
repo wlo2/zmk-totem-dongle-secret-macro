@@ -18,18 +18,18 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Always checkout external modules (no cache since you update them frequently)
       - name: Checkout zmk_autocorrect module
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: wlo2/zmk_autocorrect
           ref: main
           path: zmk_autocorrect
 
       - name: Checkout zmk-antecedent-morph module
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ssbb/zmk-antecedent-morph
           ref: v1
@@ -47,17 +47,16 @@ jobs:
           echo "build_dir=${GITHUB_WORKSPACE}/build-dongle" >> $GITHUB_ENV
 
       - name: Prepare variables
+        shell: sh -x {0}
         run: |
-          # Use pre-baked west workspace inside the container image
-          echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
+          # The container image already exports ZEPHYR_BASE, but expression
+          # context (${{ env.X }}) only reads workflow env and $GITHUB_ENV --
+          # never the image's ENV -- so it has to be re-exported here for the
+          # West Build step to reference it.
           echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
-          echo "ZMK_AUTOCORRECT_PATH=${GITHUB_WORKSPACE}/zmk_autocorrect" >> $GITHUB_ENV
-          echo "ANTE_MORPH_PATH=${GITHUB_WORKSPACE}/zmk-antecedent-morph" >> $GITHUB_ENV
           export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk_autocorrect;${GITHUB_WORKSPACE}/zmk-antecedent-morph'"
 
-          echo "zephyr_version=${ZEPHYR_VERSION}" >> $GITHUB_ENV
           echo "extra_cmake_args=-DSHIELD=\"totem_dongle\"${zmk_load_arg}" >> $GITHUB_ENV
-          echo "board=xiao_ble" >> $GITHUB_ENV
 
       - name: Verify Zephyr tree
         run: |
@@ -67,12 +66,9 @@ jobs:
           ls -al "${ZEPHYR_BASE}" | head -n 50 || true
           test -f "${ZEPHYR_BASE}/share/zephyr-package/cmake/ZephyrConfig.cmake" || (echo "Missing ZephyrConfig.cmake under ${ZEPHYR_BASE}/share/zephyr-package/cmake" && exit 1)
 
-      - name: Skip copying into pre-baked workspace (no-op)
-        run: echo "Using repo via ZMK_EXTRA_MODULES and config from GITHUB_WORKSPACE"
-
       # Cache build artifacts - keymap changes invalidate, module changes don't
       - name: Cache West build
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ${{ github.workspace }}/build-dongle
@@ -85,9 +81,7 @@ jobs:
         shell: sh -x {0}
         env:
           ZEPHYR_BASE: ${{ env.ZEPHYR_BASE }}
-        run: |
-          west build -s zmk/app -d "${{ env.build_dir }}" -b xiao_ble -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }} || \
-          (echo "Build failed, showing CMake output:" && cat ${{ env.build_dir }}/build.log && exit 1)
+        run: west build -s zmk/app -d "${{ env.build_dir }}" -b xiao_ble -- -DZMK_CONFIG=${GITHUB_WORKSPACE}/config -DZephyr_DIR=${ZEPHYR_BASE}/share/zephyr-package/cmake ${{ env.extra_cmake_args }}
 
       - name: Dongle Kconfig file
         run: |

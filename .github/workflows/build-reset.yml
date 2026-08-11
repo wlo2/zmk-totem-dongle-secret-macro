@@ -17,7 +17,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -48,7 +48,7 @@ jobs:
     name: Build settings_reset firmware
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: West Build (settings_reset)
         working-directory: /opt/zmk-env
@@ -69,7 +69,7 @@ jobs:
           fi
 
       - name: Upload settings reset firmware
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: settings_reset
           path: /opt/zmk-env/firmware/settings_reset.uf2

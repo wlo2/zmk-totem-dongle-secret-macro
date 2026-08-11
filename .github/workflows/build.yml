@@ -22,7 +22,7 @@ jobs:
         run: |
           git config --global init.defaultBranch main
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Fetch Build Matrix
         run: |
           echo "build_matrix=$(yq -oj -I0 'build.yaml')" >> $GITHUB_ENV
@@ -39,18 +39,18 @@ jobs:
       matrix: ${{ fromJson(needs.matrix.outputs.build_matrix) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Always checkout external modules (no cache since you update them frequently)
       - name: Checkout zmk_autocorrect module
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: wlo2/zmk_autocorrect
           ref: main
           path: zmk_autocorrect
 
       - name: Checkout zmk-antecedent-morph module
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ssbb/zmk-antecedent-morph
           ref: v1
@@ -69,18 +69,17 @@ jobs:
           artifact_name: ${{ matrix.artifact-name }}
           snippet: ${{ matrix.snippet }}
         run: |
-          # Use pre-baked west workspace inside the container image
-          echo "base_dir=/opt/zmk-env" >> $GITHUB_ENV
+          # The container image already exports ZEPHYR_BASE, but expression
+          # context (${{ env.X }}) only reads workflow env and $GITHUB_ENV --
+          # never the image's ENV -- so it has to be re-exported here for the
+          # West Build step to reference it.
           echo "ZEPHYR_BASE=/opt/zmk-env/zephyr" >> $GITHUB_ENV
-          echo "ZMK_AUTOCORRECT_PATH=${GITHUB_WORKSPACE}/zmk_autocorrect" >> $GITHUB_ENV
-          echo "ANTE_MORPH_PATH=${GITHUB_WORKSPACE}/zmk-antecedent-morph" >> $GITHUB_ENV
           export zmk_load_arg=" -DZMK_EXTRA_MODULES='${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk_autocorrect;${GITHUB_WORKSPACE}/zmk-antecedent-morph'"
 
           if [ -n "${snippet}" ]; then
             extra_west_args="-S \"${snippet}\""
           fi
 
-          echo "zephyr_version=${ZEPHYR_VERSION}" >> $GITHUB_ENV
           echo "extra_west_args=${extra_west_args}" >> $GITHUB_ENV
           echo "extra_cmake_args=${shield:+-DSHIELD=\"$shield\"}${zmk_load_arg}" >> $GITHUB_ENV
           echo "display_name=${shield:+$shield - }${board}" >> $GITHUB_ENV
@@ -94,9 +93,6 @@ jobs:
           ls -al "${ZEPHYR_BASE}" | head -n 50 || true
           test -f "${ZEPHYR_BASE}/share/zephyr-package/cmake/ZephyrConfig.cmake" || (echo "Missing ZephyrConfig.cmake under ${ZEPHYR_BASE}/share/zephyr-package/cmake" && exit 1)
 
-      - name: Skip copying into pre-baked workspace (no-op)
-        run: echo "Using repo via ZMK_EXTRA_MODULES and config from GITHUB_WORKSPACE"
-
       # Note: GitHub Actions caches have a fixed 7-day retention for unused caches.
       # This cannot be changed. Caches are kept alive by accessing them regularly.
       # If you need longer retention, consider using artifacts instead (configurable up to 90 days).
@@ -104,7 +100,7 @@ jobs:
       # Cache build artifacts - keymap changes invalidate, module changes don't
       # (since you update modules frequently and want fresh builds with them)
       - name: Cache West build
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ${{ github.workspace }}/build-${{ matrix.board }}-${{ matrix.shield }}
@@ -142,7 +138,7 @@ jobs:
           fi
 
       - name: Archive (${{ env.display_name }})
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifact-${{ env.artifact_name }}
           path: ${{ env.build_dir }}/artifacts
@@ -159,7 +155,7 @@ jobs:
           echo "ARTIFACT_NAME=zmk_$formatted_time" >> $GITHUB_OUTPUT
 
       - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@v7
         with:
           name: ${{ steps.timestamp_generator.outputs.ARTIFACT_NAME }}
           pattern: artifact-*
