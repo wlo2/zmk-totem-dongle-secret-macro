@@ -17,3 +17,17 @@
         events = <0>;
     };
 };
+
+/*
+ * totem.dtsi defines the real 5x4 GPIO key matrix (kscan0). A devicetree node
+ * with no `status` property defaults to enabled, so on the dongle the matrix
+ * driver would still initialise and configure 9 GPIOs -- five column outputs
+ * and four row inputs with pull-downs -- against a header that has nothing
+ * wired to it. Re-pointing `chosen` at mock_kscan above only changes which
+ * kscan ZMK reads from; it does not stop kscan0 from being instantiated.
+ * Disabling the node keeps the driver, its GPIO configuration and its polling
+ * thread out of the dongle image entirely.
+ */
+&kscan0 {
+    status = "disabled";
+};

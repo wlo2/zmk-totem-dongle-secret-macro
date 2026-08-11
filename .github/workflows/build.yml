@@ -97,102 +97,6 @@ jobs:
       - name: Skip copying into pre-baked workspace (no-op)
         run: echo "Using repo via ZMK_EXTRA_MODULES and config from GITHUB_WORKSPACE"
 
-      - name: Generate secret macro overlays
-        run: |
-          echo "Generating secret macro overlays..."
-          
-          # Create config directory
-          mkdir -p "${GITHUB_WORKSPACE}/config"
-          
-          # Make the converter script executable
-          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh"
-          
-          # Function to generate a macro
-          generate_macro() {
-            local secret_value="$1"
-            local macro_name="$2"
-            local output_file="$3"
-            local fallback_text="$4"
-            
-            if [ -z "$secret_value" ]; then
-              echo "Warning: $macro_name secret not set or empty"
-              echo "Creating fallback macro that outputs: $fallback_text"
-              
-              # Convert fallback text to bindings
-              BINDINGS=$("${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh" "$fallback_text")
-              
-              printf "behaviors {\n" > "$output_file"
-              printf "    %s: %s {\n" "$macro_name" "$macro_name" >> "$output_file"
-              printf "        compatible = \"zmk,behavior-macro\";\n" >> "$output_file"
-              printf "        #binding-cells = <0>;\n" >> "$output_file"
-              echo "        bindings = <$BINDINGS>;" >> "$output_file"
-              printf "        wait-ms = <10>;\n" >> "$output_file"
-              printf "        tap-ms = <10>;\n" >> "$output_file"
-              printf "    };\n" >> "$output_file"
-              printf "};\n" >> "$output_file"
-              
-              echo "Fallback $macro_name created (types '$fallback_text')"
-            else
-              echo "$macro_name secret found, converting string to bindings"
-              
-              # Check if the secret is already in binding format (starts with &)
-              if echo "$secret_value" | grep -q '^&'; then
-                echo "Secret appears to be in binding format already, using as-is"
-                BINDINGS="$secret_value"
-              else
-                echo "Converting string to ZMK bindings using external script..."
-                BINDINGS=$("${GITHUB_WORKSPACE}/.github/workflows/string_to_zmk.sh" "$secret_value")
-                
-                if [ $? -ne 0 ] || [ -z "$BINDINGS" ]; then
-                  echo "Error: Failed to convert string to bindings for $macro_name"
-                  exit 1
-                fi
-              fi
-              
-              # Create the secret macro
-              printf "behaviors {\n" > "$output_file"
-              printf "    %s: %s {\n" "$macro_name" "$macro_name" >> "$output_file"
-              printf "        compatible = \"zmk,behavior-macro\";\n" >> "$output_file"
-              printf "        #binding-cells = <0>;\n" >> "$output_file"
-              echo "        bindings = <$BINDINGS>;" >> "$output_file"
-              printf "        wait-ms = <10>;\n" >> "$output_file"
-              printf "        tap-ms = <10>;\n" >> "$output_file"
-              printf "    };\n" >> "$output_file"
-              printf "};\n" >> "$output_file"
-              
-              echo "Custom $macro_name created successfully"
-            fi
-            
-            # Verify the generated file
-            if [ -f "$output_file" ]; then
-              echo "$macro_name overlay file generated"
-              
-              # Basic syntax validation
-              if grep -q "behaviors {" "$output_file" && \
-                 grep -q "$macro_name:" "$output_file" && \
-                 grep -q "bindings = <" "$output_file"; then
-                echo "Overlay file structure validation passed for $macro_name"
-              else
-                echo "Error: Generated overlay file has invalid structure for $macro_name"
-                exit 1
-              fi
-            else
-              echo "Error: Failed to create $output_file"
-              exit 1
-            fi
-          }
-          
-          # Generate first secret macro
-          generate_macro "${{ secrets.STRING_PLACEHOLDER }}" "secret_macro" "${GITHUB_WORKSPACE}/config/secret_macro.overlay" "SECRET"
-          
-          # Generate second secret macro
-          generate_macro "${{ secrets.STRING_PLACEHOLDER2 }}" "secret_macro2" "${GITHUB_WORKSPACE}/config/secret_macro2.overlay" "SECRET2"
-          
-
-        env:
-          STRING_PLACEHOLDER: ${{ secrets.STRING_PLACEHOLDER }}
-          STRING_PLACEHOLDER2: ${{ secrets.STRING_PLACEHOLDER2 }}
-
       # Note: GitHub Actions caches have a fixed 7-day retention for unused caches.
       # This cannot be changed. Caches are kept alive by accessing them regularly.
       # If you need longer retention, consider using artifacts instead (configurable up to 90 days).
@@ -204,7 +108,7 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/build-${{ matrix.board }}-${{ matrix.shield }}
-          key: west-build-${{ matrix.board }}-${{ matrix.shield }}-${{ hashFiles('config/*.conf', 'config/*.keymap', 'config/*.dtsi') }}-v1
+          key: west-build-${{ matrix.board }}-${{ matrix.shield }}-${{ hashFiles('config/*.conf', 'config/*.keymap', 'config/*.dtsi', 'boards/**') }}-v1
           restore-keys: |
             west-build-${{ matrix.board }}-${{ matrix.shield }}-
 

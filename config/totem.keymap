@@ -27,9 +27,6 @@
 };
 
 / {
-    #include "secret_macro.overlay"
-    #include "secret_macro2.overlay"
-
     behaviors {
         macro_because: macro_because {
             compatible = "zmk,behavior-macro";
@@ -166,7 +163,7 @@
         Tri-layer {
             bindings = <
         &kp F6  &kp F7  &kp F8          &kp F9     &kp F10          &ac_togg  &kp F11  &kp F12  &kp F13  &kp F14
-        &none   &none   &secret_macro2  &ahahahah  &secret_macro    &tog 1    &none    &none    &none    &trans
+        &none   &none   &none           &ahahahah  &none            &tog 1    &none    &none    &none    &trans
 &trans  &kp F1  &kp F2  &kp F3          &kp F4     &kp F5           &tog 5    &trans   &trans   &trans   &trans   &trans
                         &trans          &trans     &trans           &trans    &trans   &trans
             >;
